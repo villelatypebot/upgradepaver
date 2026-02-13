@@ -1,0 +1,55 @@
+[
+  {
+    "id": "monaco",
+    "name": "Monaco",
+    "description": "Elegant and timeless stone look.",
+    "manufacturerId": "tremron",
+    "variants": [
+      {
+        "id": "monaco-glacier",
+        "name": "Glacier",
+        "textureUrl": "https://www.tremron.com/images/colors/roma/Monaco-Glacier.jpg",
+        "exampleUrl": "https://www.tremron.com/images/product_slider/monaco_1.jpg"
+      }
+    ]
+  },
+  {
+    "id": "product-1765900766670",
+    "name": "Eco-CityLock",
+    "description": "The CityLock series of standard and permeable pavers includes a wide range of shapes to suit most site pavement conditions. All CityLock units share a common joint design which increases design versatility while also helping installation patterns maintain their bond lines. Each unit features fine chamfers which create a contemporary aesthetic and smooth rolling surface. Sleek and innovative, CityLock 4x8 units are ideal for architectural purposed applications.",
+    "manufacturerId": "flagstone",
+    "prompt": "Transforme esta imagem aplicando o pavimento Eco-CityLock no chão / piso da área externa.\n    INSTRUÇÕES:\n- Substitua APENAS a superfície do chão / piso com o padrão de pavimento Eco-CityLock mostrado na textura de referência.\n- Mantenha EXATAMENTE a mesma perspectiva, iluminação e sombras realistas da cena original.\n- NÃO altere nenhum outro elementos (móveis, paredes, plantas, piscinas, estruturas).\n- Faça a instalação dos pavers parecer profissional e natural.\n- Os pavers devem seguir perfeitamente os contornos e ângulos do chão existente.\n- Mantenha sombras e reflexos naturais.\n\nO resultado deve parecer uma visualização arquitetônica profissional com os pavimentos Eco-CityLock instalados.",
+    "variants": [
+      {
+        "id": "var-1765900514347",
+        "name": "Cream/Beige",
+        "textureUrl": "https://directpavers.com/cdn/shop/files/eco-citylock-cream-beige.png",
+        "exampleUrl": "https://directpavers.com/cdn/shop/files/eco-citylock-4x8-60mm-beauty.jpg"
+      },
+      {
+        "id": "var-1765900624351",
+        "name": "Cream/Beige/Charcoal",
+        "textureUrl": "https://directpavers.com/cdn/shop/files/eco-citylock-cream-beige-charcoal.png",
+        "exampleUrl": "https://directpavers.com/cdn/shop/files/eco-citylock-4x8-60mm-beauty.jpg"
+      },
+      {
+        "id": "var-1765900671107",
+        "name": "Gray/Charcoal",
+        "textureUrl": "https://directpavers.com/cdn/shop/files/eco-citylock-gray-charcoal.png",
+        "exampleUrl": "https://directpavers.com/cdn/shop/files/eco-citylock-4x8-60mm-beauty.jpg"
+      },
+      {
+        "id": "var-1765900710287",
+        "name": "White/Pewter",
+        "textureUrl": "https://directpavers.com/cdn/shop/files/eco-citylock-white-pewter.png",
+        "exampleUrl": "https://directpavers.com/cdn/shop/files/eco-citylock-4x8-60mm-beauty.jpg"
+      },
+      {
+        "id": "var-1765900763871",
+        "name": "White/Tan/Charcoal",
+        "textureUrl": "https://directpavers.com/cdn/shop/files/eco-citylock-white-tan-charcoal.png",
+        "exampleUrl": "https://directpavers.com/cdn/shop/files/eco-citylock-4x8-60mm-beauty.jpg"
+      }
+    ]
+  }
+]

@@ -1,0 +1,118 @@
+[
+  {
+    "id": "a91ylf",
+    "timestamp": "2025-12-16T16:00:41.802Z",
+    "action": "generate_simulation",
+    "status": "success",
+    "details": {
+      "paver": "Eco-CityLock - Cream/Beige",
+      "durationMs": 15650
+    }
+  },
+  {
+    "id": "pfx3p",
+    "timestamp": "2025-12-16T15:50:35.051Z",
+    "action": "generate_simulation",
+    "status": "success",
+    "details": {
+      "paver": "Monaco - Glacier",
+      "durationMs": 18662
+    }
+  },
+  {
+    "id": "w3cwxh",
+    "timestamp": "2025-12-16T12:56:15.290Z",
+    "action": "generate_simulation",
+    "status": "success",
+    "details": {
+      "paver": "Monaco - Glacier",
+      "durationMs": 16005
+    }
+  },
+  {
+    "id": "raocyr",
+    "timestamp": "2025-12-16T12:26:39.003Z",
+    "action": "generate_simulation",
+    "status": "success",
+    "details": {
+      "paver": "Monaco - Glacier",
+      "durationMs": 14659
+    }
+  },
+  {
+    "id": "k2amf",
+    "timestamp": "2025-12-16T00:47:29.174Z",
+    "action": "generate_simulation",
+    "status": "success",
+    "details": {
+      "paver": "Monaco - Glacier",
+      "durationMs": 14208
+    }
+  },
+  {
+    "id": "jw9612",
+    "timestamp": "2025-12-16T00:38:38.635Z",
+    "action": "generate_simulation",
+    "status": "error",
+    "details": {
+      "paver": "Monaco - Glacier",
+      "error": "API returned text/no-image. Text excerpt: ... (Check server logs for full response)",
+      "durationMs": 6836
+    }
+  },
+  {
+    "id": "8g8qud",
+    "timestamp": "2025-12-16T00:07:22.404Z",
+    "action": "generate_simulation",
+    "status": "error",
+    "details": {
+      "paver": "Monaco - Glacier",
+      "error": "API returned text instead of image: Aqui está a imagem com o pavimento Monaco - Glacier aplicado na área externa, mantendo a perspectiva, iluminação e sombras originais:\n\n",
+      "durationMs": 9680
+    }
+  },
+  {
+    "id": "kt0mzo",
+    "timestamp": "2025-12-15T21:10:01.243Z",
+    "action": "generate_simulation",
+    "status": "error",
+    "details": {
+      "paver": "Lenza Block - Retaining Wall - Lions Bridge",
+      "error": "API returned text instead of image: Aqui está a imagem com o pavimento Lenza Block - Retaining Wall - Lions Bridge aplicado no chão/piso da área externa, mantendo a perspectiva, iluminação e sombras originais:\n\n",
+      "durationMs": 10966
+    }
+  },
+  {
+    "id": "2ydw8o",
+    "timestamp": "2025-12-15T21:07:38.953Z",
+    "action": "generate_simulation",
+    "status": "error",
+    "details": {
+      "paver": "Lenza Block - Retaining Wall - Lions Bridge",
+      "error": "{\"error\":{\"code\":400,\"message\":\"* GenerateContentRequest.generation_config.response_mime_type: allowed mimetypes are `text/plain`, `application/json`, `application/xml`, `application/yaml` and `text/x.enum`.\\n\",\"status\":\"INVALID_ARGUMENT\"}}",
+      "durationMs": 1059
+    }
+  },
+  {
+    "id": "ay3l3d",
+    "timestamp": "2025-12-15T21:05:23.116Z",
+    "action": "generate_simulation",
+    "status": "error",
+    "details": {
+      "paver": "Lenza Block - Retaining Wall - Lions Bridge",
+      "error": "API returned text instead of image: Aqui está a transformação da imagem com o pavimento Lenza Block - Retaining Wall - Lions Bridge aplicado no chão/piso da área externa, seguindo todas as suas instruções:\n\n",
+      "durationMs": 5641
+    }
+  },
+  {
+    "id": "k4c8r9",
+    "timestamp": "2025-12-15T21:01:46.104Z",
+    "action": "generate_simulation",
+    "status": "error",
+    "details": {
+      "paver": "Lenza Block - Retaining Wall - Lions Bridge",
+      "error": "models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.",
+      "durationMs": 2029
+    }
+  }
+]
