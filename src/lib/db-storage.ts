@@ -260,8 +260,6 @@ export async function insertAnalyticsEvent(event: {
     event_type: string;
     event_data?: any;
     step?: string | null;
-    user_agent?: string | null;
-    referrer?: string | null;
 }): Promise<void> {
     try {
         const { error } = await supabaseAdmin
@@ -271,8 +269,6 @@ export async function insertAnalyticsEvent(event: {
                 event_type: event.event_type,
                 event_data: event.event_data || {},
                 step: event.step || null,
-                user_agent: event.user_agent || null,
-                referrer: event.referrer || null,
             });
 
         if (error) throw error;

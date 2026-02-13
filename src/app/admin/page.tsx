@@ -158,9 +158,10 @@ export default function AdminPage() {
     };
 
     // ─── Pricing/Zone/Lead Handlers ───
-    const handleSavePricing = async () => {
+    const handleSavePricing = async (configOverride?: PricingConfig) => {
         try {
-            const r = await fetch('/api/pricing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pricingConfig) });
+            const toSave = configOverride || pricingConfig;
+            const r = await fetch('/api/pricing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(toSave) });
             const d = await r.json(); !d.error ? toast.success("Pricing saved!") : toast.error("Failed");
         } catch { toast.error("Error saving"); }
     };
@@ -196,7 +197,7 @@ export default function AdminPage() {
     // ─── Login Screen ───
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-muted/20">
+            <div className="min-h-screen flex items-center justify-center bg-muted/20 px-4">
                 <Card className="w-full max-w-md">
                     <CardHeader>
                         <CardTitle className="text-2xl flex items-center gap-2"><Lock className="w-6 h-6 text-primary" />Admin Access</CardTitle>
@@ -222,9 +223,9 @@ export default function AdminPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-background flex">
-            {/* Sidebar */}
-            <aside className="w-56 border-r bg-card flex flex-col sticky top-0 h-screen">
+        <div className="min-h-screen bg-background flex flex-col md:flex-row">
+            {/* Sidebar - desktop */}
+            <aside className="hidden md:flex w-56 border-r bg-card flex-col sticky top-0 h-screen">
                 <div className="p-4 border-b flex items-center gap-2">
                     <img src="/logo.png" alt="Logo" className="w-7 h-7 object-contain" />
                     <span className="font-bold text-sm">Direct Pavers</span>
@@ -246,18 +247,29 @@ export default function AdminPage() {
                 </div>
             </aside>
 
+            {/* Mobile header */}
+            <header className="md:hidden sticky top-0 z-50 bg-card border-b px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                    <span className="font-bold text-sm">Admin</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground h-8 px-2">
+                    <LogOut className="h-4 w-4" />
+                </Button>
+            </header>
+
             {/* Main */}
-            <main className="flex-1 p-8 overflow-y-auto">
-                <div className="max-w-6xl mx-auto space-y-8">
+            <main className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
+                <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
 
                 {/* ═══ DASHBOARD ═══ */}
                 {activeTab === "dashboard" && (
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
-                            <h1 className="text-2xl font-bold">Dashboard</h1>
+                            <h1 className="text-xl md:text-2xl font-bold">Dashboard</h1>
                             <Button variant="outline" size="sm" onClick={() => { setDashboardLoaded(false); loadDashboard(); }}>Refresh</Button>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 gap-3 md:gap-4">
                             {[
                                 { label: "Sessions (30d)", value: dashboardData?.totalSessions || 0, icon: BarChart3 },
                                 { label: "Leads", value: dashboardData?.totalLeads || 0, icon: Users },
@@ -281,19 +293,19 @@ export default function AdminPage() {
                                         const maxCount = dashboardData?.funnel?.["welcome"] || 1;
                                         const pct = Math.round((count / maxCount) * 100);
                                         return (
-                                            <div key={step.key} className="flex items-center gap-3">
-                                                <span className="text-xs w-28 text-right text-muted-foreground">{step.label}</span>
-                                                <div className="flex-1 bg-muted rounded-full h-6 overflow-hidden">
+                                            <div key={step.key} className="flex items-center gap-2 md:gap-3">
+                                                <span className="text-[10px] md:text-xs w-20 md:w-28 text-right text-muted-foreground truncate">{step.label}</span>
+                                                <div className="flex-1 bg-muted rounded-full h-5 md:h-6 overflow-hidden">
                                                     <div className="h-full bg-primary rounded-full transition-all duration-700" style={{ width: `${Math.max(pct, 2)}%` }} />
                                                 </div>
-                                                <span className="text-xs font-mono w-20 text-right">{count} ({pct}%)</span>
+                                                <span className="text-[10px] md:text-xs font-mono w-16 md:w-20 text-right">{count} ({pct}%)</span>
                                             </div>
                                         );
                                     })}
                                 </div>
                             </CardContent>
                         </Card>
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             <Card>
                                 <CardHeader><CardTitle className="text-base">Popular Products</CardTitle></CardHeader>
                                 <CardContent>
@@ -328,8 +340,8 @@ export default function AdminPage() {
 
                 {/* ═══ PRODUCTS ═══ */}
                 {activeTab === "products" && (
-                    <div className="grid lg:grid-cols-12 gap-8">
-                        <div className="lg:col-span-5 space-y-6">
+                    <div className="grid lg:grid-cols-12 gap-4 md:gap-8">
+                        <div className="lg:col-span-5 space-y-4 md:space-y-6">
                             <Card className={editingProduct ? "border-primary" : ""}>
                                 <CardHeader>
                                     <div className="flex justify-between items-center">
@@ -426,12 +438,12 @@ export default function AdminPage() {
 
                 {/* ═══ PRICING ═══ */}
                 {activeTab === "pricing" && (
-                    <div className="max-w-3xl space-y-6">
-                        <h1 className="text-2xl font-bold">Pricing</h1>
+                    <div className="max-w-3xl space-y-4 md:space-y-6">
+                        <h1 className="text-xl md:text-2xl font-bold">Pricing</h1>
                         <Card>
                             <CardHeader><CardTitle className="text-base">General</CardTitle></CardHeader>
                             <CardContent className="space-y-5">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2"><Label>Labor Rate ($/sqft)</Label>
                                         <div className="flex items-center gap-1"><span className="text-muted-foreground">$</span>
                                             <Input type="number" step="0.50" min="0" value={pricingConfig.laborRatePerSqft} onChange={e => setPricingConfig({ ...pricingConfig, laborRatePerSqft: Number(e.target.value) })} />
@@ -443,19 +455,23 @@ export default function AdminPage() {
                                 </div>
                                 <div className="border-t pt-4">
                                     <Label className="font-semibold mb-3 block">Contact</Label>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Phone</Label><Input value={pricingConfig.ownerPhone} onChange={e => setPricingConfig({ ...pricingConfig, ownerPhone: e.target.value })} /></div>
                                         <div className="space-y-1"><Label className="text-xs text-muted-foreground">WhatsApp</Label><Input value={pricingConfig.ownerWhatsapp} onChange={e => setPricingConfig({ ...pricingConfig, ownerWhatsapp: e.target.value })} /></div>
                                     </div>
                                 </div>
                                 <div className="border-t pt-4 flex items-center justify-between">
                                     <div><Label className="font-semibold">Lead Capture</Label><p className="text-xs text-muted-foreground">Ask name & email during quote</p></div>
-                                    <button onClick={() => setPricingConfig({ ...pricingConfig, requireLeadCapture: !pricingConfig.requireLeadCapture })}
+                                    <button onClick={() => {
+                                        const updated = { ...pricingConfig, requireLeadCapture: !pricingConfig.requireLeadCapture };
+                                        setPricingConfig(updated);
+                                        handleSavePricing(updated);
+                                    }}
                                         className={`relative w-11 h-6 rounded-full transition-colors ${pricingConfig.requireLeadCapture ? 'bg-primary' : 'bg-muted-foreground/30'}`}>
                                         <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${pricingConfig.requireLeadCapture ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
                                     </button>
                                 </div>
-                                <Button onClick={handleSavePricing} className="w-full">Save Pricing</Button>
+                                <Button onClick={() => handleSavePricing()} className="w-full">Save Pricing</Button>
                             </CardContent>
                         </Card>
                         <Card>
@@ -473,10 +489,10 @@ export default function AdminPage() {
                                 ))}
                                 <div className="border-t pt-3">
                                     <Label className="text-sm font-semibold mb-2 block">Add Zone</Label>
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                         <Input value={newZoneLabel} onChange={e => setNewZoneLabel(e.target.value)} placeholder="e.g. Miami (+ 25mi)" />
                                         <div className="flex items-center gap-1"><span className="text-muted-foreground">$</span><Input type="number" min="0" value={newZoneFee} onChange={e => setNewZoneFee(Number(e.target.value))} /></div>
-                                        <Button onClick={handleAddZone} disabled={!newZoneLabel}><Plus className="mr-1 h-4 w-4" />Add</Button>
+                                        <Button onClick={handleAddZone} disabled={!newZoneLabel} className="w-full sm:w-auto"><Plus className="mr-1 h-4 w-4" />Add</Button>
                                     </div>
                                 </div>
                             </CardContent>
@@ -488,22 +504,26 @@ export default function AdminPage() {
                 {activeTab === "leads" && (
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
-                            <h1 className="text-2xl font-bold">Leads ({leads.length})</h1>
+                            <h1 className="text-xl md:text-2xl font-bold">Leads ({leads.length})</h1>
                             <Button variant="outline" size="sm" onClick={() => { setLeadsLoaded(false); loadLeads(); }}>Refresh</Button>
                         </div>
                         <Card><CardContent className="pt-6">
                             <div className="border rounded-md divide-y max-h-[600px] overflow-y-auto">
                                 {!leads.length && <p className="p-6 text-center text-muted-foreground">No leads yet.</p>}
                                 {leads.map((l: any) => (
-                                    <div key={l.id} className="p-4 flex items-center gap-4 hover:bg-muted/30 transition">
-                                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"><Users className="w-4 h-4 text-primary" /></div>
-                                        <div className="flex-1 min-w-0"><p className="font-medium text-sm">{l.name}</p><p className="text-xs text-muted-foreground truncate">{l.email}{l.phone && ` · ${l.phone}`}</p></div>
-                                        <span className="text-[10px] bg-muted px-2 py-0.5 rounded">{l.source}</span>
-                                        <select value={l.status} onChange={e => handleUpdateLeadStatus(l.id, e.target.value)}
-                                            className={`text-[11px] px-2 py-1 rounded-full border-0 font-medium cursor-pointer ${l.status === 'new' ? 'bg-blue-100 text-blue-700' : l.status === 'contacted' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
-                                            <option value="new">New</option><option value="contacted">Contacted</option><option value="converted">Converted</option>
-                                        </select>
-                                        <span className="text-xs text-muted-foreground whitespace-nowrap">{new Date(l.created_at).toLocaleDateString()}</span>
+                                    <div key={l.id} className="p-3 md:p-4 hover:bg-muted/30 transition">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"><Users className="w-4 h-4 text-primary" /></div>
+                                            <div className="flex-1 min-w-0"><p className="font-medium text-sm">{l.name}</p><p className="text-xs text-muted-foreground truncate">{l.email}{l.phone && ` · ${l.phone}`}</p></div>
+                                            <select value={l.status} onChange={e => handleUpdateLeadStatus(l.id, e.target.value)}
+                                                className={`text-[11px] px-2 py-1 rounded-full border-0 font-medium cursor-pointer ${l.status === 'new' ? 'bg-blue-100 text-blue-700' : l.status === 'contacted' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                                                <option value="new">New</option><option value="contacted">Contacted</option><option value="converted">Converted</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-1.5 ml-12">
+                                            <span className="text-[10px] bg-muted px-2 py-0.5 rounded">{l.source}</span>
+                                            <span className="text-xs text-muted-foreground">{new Date(l.created_at).toLocaleDateString()}</span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -514,7 +534,7 @@ export default function AdminPage() {
                 {/* ═══ LOGS ═══ */}
                 {activeTab === "logs" && (
                     <div className="space-y-6">
-                        <div className="flex items-center justify-between"><h1 className="text-2xl font-bold">Activity Logs</h1><Button variant="outline" size="sm" onClick={loadLogs}>Refresh</Button></div>
+                        <div className="flex items-center justify-between"><h1 className="text-xl md:text-2xl font-bold">Activity Logs</h1><Button variant="outline" size="sm" onClick={loadLogs}>Refresh</Button></div>
                         <Card><CardContent className="pt-6">
                             <div className="border rounded-md divide-y max-h-[600px] overflow-y-auto">
                                 {!logs.length && <p className="p-4 text-center text-muted-foreground">No logs.</p>}
@@ -537,8 +557,8 @@ export default function AdminPage() {
 
                 {/* ═══ SETTINGS ═══ */}
                 {activeTab === "settings" && (
-                    <div className="space-y-6 max-w-2xl">
-                        <h1 className="text-2xl font-bold">Settings</h1>
+                    <div className="space-y-4 md:space-y-6 max-w-2xl">
+                        <h1 className="text-xl md:text-2xl font-bold">Settings</h1>
                         <Card>
                             <CardHeader><CardTitle>Gemini API Key</CardTitle></CardHeader>
                             <CardContent className="space-y-3">
@@ -560,6 +580,28 @@ export default function AdminPage() {
 
                 </div>
             </main>
+
+            {/* Mobile bottom nav */}
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t z-50 safe-area-pb">
+                <div className="flex justify-around py-1">
+                    {NAV_ITEMS.slice(0, 5).map(item => (
+                        <button key={item.id} onClick={() => setActiveTab(item.id)}
+                            className={`flex flex-col items-center gap-0.5 px-2 py-2 text-[10px] font-medium transition-colors min-w-0 ${
+                                activeTab === item.id ? "text-primary" : "text-muted-foreground"
+                            }`}>
+                            <item.icon className="w-5 h-5" />
+                            <span className="truncate">{item.label}</span>
+                        </button>
+                    ))}
+                    <button onClick={() => setActiveTab("settings")}
+                        className={`flex flex-col items-center gap-0.5 px-2 py-2 text-[10px] font-medium transition-colors min-w-0 ${
+                            activeTab === "settings" ? "text-primary" : "text-muted-foreground"
+                        }`}>
+                        <Settings className="w-5 h-5" />
+                        <span className="truncate">Settings</span>
+                    </button>
+                </div>
+            </nav>
         </div>
     );
 }

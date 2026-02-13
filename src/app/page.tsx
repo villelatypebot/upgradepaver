@@ -95,32 +95,32 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans">
+    <div className="min-h-[100dvh] flex flex-col font-sans">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="container mx-auto px-3 md:px-4 h-14 md:h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 md:gap-3">
             <div className="relative w-8 h-8 md:w-10 md:h-10">
               <img src="/logo.png" alt="DirectPavers Logo" className="object-contain w-full h-full" />
             </div>
-            <span className="font-bold text-lg md:text-xl tracking-tight text-foreground">Direct Pavers</span>
+            <span className="font-bold text-base md:text-xl tracking-tight text-foreground">Direct Pavers</span>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-8 md:py-12">
+      <main className="flex-1 container mx-auto px-3 md:px-4 py-6 md:py-12">
         {!generatedImage ? (
-          <div className="max-w-6xl mx-auto space-y-12">
+          <div className="max-w-6xl mx-auto space-y-8 md:space-y-12">
             {/* Hero Text */}
-            <div className="text-center space-y-4 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
+            <div className="text-center space-y-3 md:space-y-4 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground">
                 Visualize Your <span className="text-primary">Dream Patio</span>
               </h1>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-base md:text-lg text-muted-foreground px-2">
                 Upload a photo, choose a manufacturer, and see the transformation.
               </p>
               <Link href="/quote">
-                <Button size="lg" className="mt-4 px-8 text-lg h-14 font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
+                <Button size="lg" className="mt-3 md:mt-4 px-6 md:px-8 text-base md:text-lg h-12 md:h-14 font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
                   <MessageCircle className="mr-2 h-5 w-5" />
                   Get Your Free Quote
                 </Button>
@@ -128,19 +128,19 @@ export default function Home() {
             </div>
 
             {/* Quote Flow Benefits */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-3xl mx-auto">
               {[
                 { icon: Camera, label: "Upload Photos", desc: "Show us your space" },
                 { icon: Ruler, label: "Enter Measurements", desc: "Area dimensions" },
                 { icon: Wand2, label: "AI Visualization", desc: "See the result" },
                 { icon: DollarSign, label: "Instant Quote", desc: "Material & labor" },
               ].map((item, i) => (
-                <div key={i} className="text-center space-y-2 p-4 rounded-xl bg-card border shadow-sm">
-                  <div className="mx-auto w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <item.icon className="w-5 h-5 text-primary" />
+                <div key={i} className="text-center space-y-1.5 md:space-y-2 p-3 md:p-4 rounded-xl bg-card border shadow-sm">
+                  <div className="mx-auto w-9 h-9 md:w-10 md:h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <item.icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                   </div>
-                  <p className="font-semibold text-sm">{item.label}</p>
-                  <p className="text-xs text-muted-foreground">{item.desc}</p>
+                  <p className="font-semibold text-xs md:text-sm">{item.label}</p>
+                  <p className="text-[10px] md:text-xs text-muted-foreground">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -150,12 +150,12 @@ export default function Home() {
               <p className="text-sm text-muted-foreground mb-2">Or try a quick visualization below</p>
             </div>
 
-            <div className="grid lg:grid-cols-12 gap-8 items-start">
+            <div className="grid lg:grid-cols-12 gap-6 md:gap-8 items-start">
               {/* Left: Upload */}
               <div className="lg:col-span-5 space-y-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
-                  <h2 className="text-xl font-semibold">Upload Photo</h2>
+                  <h2 className="text-lg md:text-xl font-semibold">Upload Photo</h2>
                 </div>
                 <ImageUpload
                   selectedImage={selectedImage}
@@ -169,10 +169,10 @@ export default function Home() {
               </div>
 
               {/* Right: Select & Generate */}
-              <div className="lg:col-span-6 space-y-6">
+              <div className="lg:col-span-6 space-y-4 md:space-y-6">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
-                  <h2 className="text-xl font-semibold">Select Products</h2>
+                  <h2 className="text-lg md:text-xl font-semibold">Select Products</h2>
                 </div>
 
                 {/* Manufacturer Tabs */}
@@ -186,12 +186,12 @@ export default function Home() {
                         setSelectedVariant(null);
                       }}
                       className={cn(
-                        "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all whitespace-nowrap",
+                        "flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-3 py-2 text-xs md:text-sm font-medium rounded-md transition-all whitespace-nowrap",
                         activeManufacturer === m.id ? "bg-white text-primary shadow-sm ring-1 ring-black/5" : "hover:text-foreground text-muted-foreground"
                       )}
                     >
-                      <img src={m.logo} alt={m.name} className="w-5 h-5 object-contain" />
-                      {m.name}
+                      <img src={m.logo} alt={m.name} className="w-4 h-4 md:w-5 md:h-5 object-contain" />
+                      <span className="hidden sm:inline">{m.name}</span>
                     </button>
                   ))}
                 </div>
@@ -203,24 +203,24 @@ export default function Home() {
                 />
 
                 {displayedProducts.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8 border-2 border-dashed rounded-xl">
+                  <p className="text-center text-muted-foreground py-6 md:py-8 border-2 border-dashed rounded-xl text-sm">
                     No products available for this manufacturer.
                   </p>
                 )}
 
                 {/* Variant Selector */}
                 {selectedProduct && selectedProduct.variants.length > 0 && (
-                  <div className="animate-in fade-in slide-in-from-top-2 duration-300 bg-card border rounded-xl p-4 shadow-sm">
-                    <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-300 bg-card border rounded-xl p-3 md:p-4 shadow-sm">
+                    <h3 className="text-xs md:text-sm font-semibold mb-2 md:mb-3 flex items-center gap-2">
                       Select Color: <span className="text-primary">{selectedVariant?.name}</span>
                     </h3>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-2 md:gap-3">
                       {selectedProduct.variants.map(variant => (
                         <button
                           key={variant.id}
                           onClick={() => setSelectedVariant(variant)}
                           className={cn(
-                            "relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all hover:scale-105",
+                            "relative w-12 h-12 md:w-16 md:h-16 rounded-lg overflow-hidden border-2 transition-all hover:scale-105",
                             selectedVariant?.id === variant.id ? "border-primary ring-2 ring-primary/20 scale-105" : "border-transparent opacity-80 hover:opacity-100"
                           )}
                           title={variant.name}
@@ -237,16 +237,16 @@ export default function Home() {
                       ))}
                     </div>
                     {selectedProduct.description && (
-                      <p className="mt-3 text-sm text-muted-foreground">{selectedProduct.description}</p>
+                      <p className="mt-2 md:mt-3 text-xs md:text-sm text-muted-foreground">{selectedProduct.description}</p>
                     )}
                   </div>
                 )}
 
-                <Separator className="my-6" />
+                <Separator className="my-4 md:my-6" />
 
                 <Button
                   size="lg"
-                  className="w-full text-lg h-14 font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all"
+                  className="w-full text-base md:text-lg h-12 md:h-14 font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all"
                   onClick={handleGenerate}
                   disabled={!selectedImage || !selectedProduct || !selectedVariant || isGenerating}
                 >
@@ -266,25 +266,25 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 animate-in fade-in zoom-in-95 duration-500">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4">
               <div>
-                <h2 className="text-3xl font-bold">Your Design</h2>
-                <p className="text-muted-foreground">Drag the slider to compare before & after.</p>
+                <h2 className="text-2xl md:text-3xl font-bold">Your Design</h2>
+                <p className="text-sm md:text-base text-muted-foreground">Drag the slider to compare before & after.</p>
               </div>
-              <div className="flex items-center gap-3">
-                <Button variant="outline" onClick={() => setGeneratedImage(null)}>
+              <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto">
+                <Button variant="outline" onClick={() => setGeneratedImage(null)} className="flex-1 md:flex-none">
                   <RefreshCcw className="mr-2 h-4 w-4" />
                   Edit / Reset
                 </Button>
-                <Button onClick={handleDownload} className="bg-primary hover:bg-primary/90">
+                <Button onClick={handleDownload} className="bg-primary hover:bg-primary/90 flex-1 md:flex-none">
                   <Download className="mr-2 h-4 w-4" />
-                  Download Image
+                  Download
                 </Button>
               </div>
             </div>
 
-            <div className="h-[60vh] md:h-[70vh] w-full bg-muted/20 rounded-xl border p-2 shadow-inner">
+            <div className="h-[50vh] md:h-[70vh] w-full bg-muted/20 rounded-xl border p-1 md:p-2 shadow-inner">
               {selectedImage && generatedImage && (
                 <ComparisonSlider
                   original={selectedImage}
@@ -294,19 +294,19 @@ export default function Home() {
               )}
             </div>
 
-            <div className="bg-card p-6 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+            <div className="bg-card p-4 md:p-6 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6 shadow-sm">
               <div>
-                <h3 className="font-semibold text-lg">Love this look?</h3>
-                <p className="text-muted-foreground">Get an instant quote with material & installation costs.</p>
+                <h3 className="font-semibold text-base md:text-lg">Love this look?</h3>
+                <p className="text-sm text-muted-foreground">Get an instant quote with material & installation costs.</p>
               </div>
-              <div className="flex items-center gap-3">
-                <Link href="/quote">
-                  <Button size="lg" className="px-8 font-semibold">
+              <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto">
+                <Link href="/quote" className="flex-1 md:flex-none">
+                  <Button size="lg" className="px-6 md:px-8 font-semibold w-full">
                     <DollarSign className="mr-2 h-4 w-4" />
                     Get Your Quote
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="px-6" asChild>
+                <Button size="lg" variant="outline" className="px-4 md:px-6 flex-1 md:flex-none" asChild>
                   <a href="https://directpavers.com" target="_blank" rel="noopener noreferrer">
                     Shop Online
                   </a>
@@ -317,7 +317,7 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="border-t py-6 bg-muted/30">
+      <footer className="border-t py-4 md:py-6 bg-muted/30">
         <div className="container mx-auto px-4 text-center">
           <a
             href="https://directpavers.com"

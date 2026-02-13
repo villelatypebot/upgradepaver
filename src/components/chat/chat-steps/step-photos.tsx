@@ -46,9 +46,9 @@ export function StepPhotos({ photos, onPhotosChange, onContinue, answered }: Ste
                 <ChatMessage type="user">
                     <div className="flex flex-wrap gap-2">
                         {photos.map((photo, i) => (
-                            <img key={i} src={photo} alt={`Photo ${i + 1}`} className="w-16 h-16 rounded-lg object-cover" />
+                            <img key={i} src={photo} alt={`Photo ${i + 1}`} className="w-12 h-12 md:w-16 md:h-16 rounded-lg object-cover" />
                         ))}
-                        <span className="self-center ml-1">{photos.length} photo{photos.length !== 1 ? "s" : ""} uploaded</span>
+                        <span className="self-center ml-1 text-sm">{photos.length} photo{photos.length !== 1 ? "s" : ""} uploaded</span>
                     </div>
                 </ChatMessage>
             </>
@@ -62,13 +62,13 @@ export function StepPhotos({ photos, onPhotosChange, onContinue, answered }: Ste
             </ChatMessage>
             <div className="mt-3 space-y-3">
                 {photos.length > 0 && (
-                    <div className="flex flex-wrap gap-3 px-2">
+                    <div className="flex flex-wrap gap-2 md:gap-3 px-2">
                         {photos.map((photo, i) => (
-                            <div key={i} className="relative group w-24 h-24 rounded-xl overflow-hidden border shadow-sm">
+                            <div key={i} className="relative group w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden border shadow-sm">
                                 <img src={photo} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
                                 <button
                                     onClick={() => removePhoto(i)}
-                                    className="absolute top-1 right-1 bg-destructive text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="absolute top-1 right-1 bg-destructive text-white rounded-full p-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                                 >
                                     <X className="w-3 h-3" />
                                 </button>
@@ -76,7 +76,7 @@ export function StepPhotos({ photos, onPhotosChange, onContinue, answered }: Ste
                         ))}
                         <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="w-24 h-24 rounded-xl border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center gap-1 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer"
+                            className="w-20 h-20 md:w-24 md:h-24 rounded-xl border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center gap-1 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer"
                         >
                             <Plus className="w-5 h-5 text-muted-foreground" />
                             <span className="text-[10px] text-muted-foreground">Add more</span>
@@ -87,7 +87,7 @@ export function StepPhotos({ photos, onPhotosChange, onContinue, answered }: Ste
                 {photos.length === 0 && (
                     <Card
                         className={cn(
-                            "border-2 border-dashed flex flex-col items-center justify-center p-8 cursor-pointer transition-all duration-200 bg-muted/20 hover:bg-muted/40 mx-2",
+                            "border-2 border-dashed flex flex-col items-center justify-center p-6 md:p-8 cursor-pointer transition-all duration-200 bg-muted/20 hover:bg-muted/40 mx-2",
                             isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25"
                         )}
                         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -99,7 +99,7 @@ export function StepPhotos({ photos, onPhotosChange, onContinue, answered }: Ste
                             <Upload className="w-6 h-6 text-primary/80" />
                         </div>
                         <p className="font-medium text-sm text-foreground/80">Upload your photos</p>
-                        <p className="text-xs text-muted-foreground mt-1">Drag & drop or click to browse</p>
+                        <p className="text-xs text-muted-foreground mt-1">Tap to browse or take a photo</p>
                     </Card>
                 )}
 

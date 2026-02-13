@@ -35,11 +35,11 @@ export function StepSimulation({
         return (
             <ChatMessage type="bot">
                 <div className="flex items-center gap-3">
-                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    <Loader2 className="w-5 h-5 animate-spin text-primary flex-shrink-0" />
                     <div>
-                        <p className="font-medium">Generating your visualization...</p>
+                        <p className="font-medium text-sm">Generating your visualization...</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                            Applying {product.name} - {variant.name} to your space. This may take a moment.
+                            Applying {product.name} - {variant.name} to your space.
                         </p>
                     </div>
                 </div>
@@ -52,13 +52,13 @@ export function StepSimulation({
     return (
         <>
             <ChatMessage type="bot">
-                <p className="font-semibold mb-2">
+                <p className="font-semibold text-sm mb-1">
                     Here&apos;s how your space would look with {product.name} in {variant.name}!
                 </p>
                 <p className="text-muted-foreground text-xs">Drag the slider to compare before & after.</p>
             </ChatMessage>
 
-            <div className="mx-2 h-[300px] md:h-[400px] rounded-xl overflow-hidden border shadow-lg">
+            <div className="mx-2 h-[250px] sm:h-[300px] md:h-[400px] rounded-xl overflow-hidden border shadow-lg">
                 <ComparisonSlider
                     original={originalImage}
                     generated={generatedImage}
@@ -67,23 +67,23 @@ export function StepSimulation({
             </div>
 
             {!answered && (
-                <div className="flex flex-wrap justify-center gap-3 mt-4">
-                    <Button onClick={onShowQuote} size="lg" className="font-semibold shadow-lg">
+                <div className="flex flex-wrap justify-center gap-2 md:gap-3 mt-3 md:mt-4 px-2">
+                    <Button onClick={onShowQuote} size="lg" className="font-semibold shadow-lg text-sm md:text-base">
                         {isLastPhoto ? (
                             <>
-                                <DollarSign className="mr-2 h-4 w-4" />
+                                <DollarSign className="mr-1.5 h-4 w-4" />
                                 Show Me the Price
                             </>
                         ) : (
                             "Approve & Next Photo"
                         )}
                     </Button>
-                    <Button variant="outline" onClick={onTryAnother}>
-                        <RefreshCcw className="mr-2 h-4 w-4" />
-                        Try Another Style
+                    <Button variant="outline" onClick={onTryAnother} size="default" className="text-sm">
+                        <RefreshCcw className="mr-1.5 h-4 w-4" />
+                        Try Another
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={onDownload}>
-                        <Download className="mr-2 h-4 w-4" />
+                    <Button variant="ghost" size="sm" onClick={onDownload} className="text-xs">
+                        <Download className="mr-1 h-3.5 w-3.5" />
                         Download
                     </Button>
                 </div>

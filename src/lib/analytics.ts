@@ -35,8 +35,6 @@ export function trackEvent(
             event_type: eventType,
             event_data: data || {},
             step: step || null,
-            user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-            referrer: typeof document !== 'undefined' ? document.referrer : null,
         };
         fetch('/api/analytics', {
             method: 'POST',
