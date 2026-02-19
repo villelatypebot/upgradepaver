@@ -9,7 +9,6 @@ import { StepLeadCapture } from "./chat-steps/step-lead-capture";
 import { StepProductSelect } from "./chat-steps/step-product-select";
 import { StepSimulation } from "./chat-steps/step-simulation";
 import { StepMaterialQuote } from "./chat-steps/step-material-quote";
-import { StepLaborQuote } from "./chat-steps/step-labor-quote";
 import { getProducts } from "@/lib/storage";
 import { PaverProduct, PaverVariant, ManufacturerId } from "@/config/pavers";
 import { PricingConfig, DEFAULT_PRICING, DeliveryZone } from "@/config/pricing";
@@ -20,7 +19,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 
-type Step = "welcome" | "photos" | "measurements" | "lead-capture" | "photo-product" | "photo-simulation" | "material-quote" | "labor-quote";
+type Step = "welcome" | "photos" | "measurements" | "lead-capture" | "photo-product" | "photo-simulation" | "material-quote";
 
 interface PhotoEntry {
     photo: string;
@@ -242,7 +241,9 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                 const sqft = width * length;
                 const quote = calculateMaterialQuote(sqft, selectedProduct, selectedVariant, selectedZone.fee, selectedZone.label, pricingConfig);
                 setMaterialQuote(quote);
-                trackEvent(EVENTS.QUOTE_VIEWED, { type: 'material', total: quote.materialTotal });
+                const labor = calculateLaborQuote(sqft, pricingConfig);
+                setLaborQuote(labor);
+                trackEvent(EVENTS.QUOTE_VIEWED, { type: 'full', total: quote.materialTotal + labor.laborCost });
             }
             advanceStep("material-quote");
         }
@@ -266,6 +267,8 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
             const sqft = width * length;
             const quote = calculateMaterialQuote(sqft, lastDone.product, lastDone.variant, zone.fee, zone.label, pricingConfig);
             setMaterialQuote(quote);
+            const labor = calculateLaborQuote(sqft, pricingConfig);
+            setLaborQuote(labor);
         }
     };
 
@@ -324,13 +327,6 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
         }
     };
 
-    const handleSeeLaborCost = () => {
-        const sqft = width * length;
-        const labor = calculateLaborQuote(sqft, pricingConfig);
-        setLaborQuote(labor);
-        trackEvent(EVENTS.QUOTE_VIEWED, { type: 'labor', total: labor.laborCost });
-        advanceStep("labor-quote");
-    };
 
     const handleTalkToOwner = () => {
         trackEvent(EVENTS.CTA_CLICKED, { type: 'sms' });
@@ -498,29 +494,20 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                 />
             )}
 
-            {/* Material Quote */}
+            {/* Material + Labor Quote (unified) */}
             {(isStepActive("material-quote") || isStepDone("material-quote")) && (
                 <StepMaterialQuote
                     quote={materialQuote}
+                    laborQuote={laborQuote}
                     deliveryZones={deliveryZones}
                     selectedZone={selectedZone}
                     onDeliveryZoneChange={handleDeliveryZoneChange}
-                    onBuyMaterial={handleBuyMaterial}
-                    onSeeLaborCost={handleSeeLaborCost}
-                    answered={isStepDone("material-quote")}
-                />
-            )}
-
-            {/* Labor Quote */}
-            {isStepActive("labor-quote") && materialQuote && laborQuote && (
-                <StepLaborQuote
-                    materialQuote={materialQuote}
-                    laborQuote={laborQuote}
+                    onBuyMaterial={() => handleBuyMaterial(false)}
+                    onBuyWithLabor={() => handleBuyMaterial(true)}
+                    onTalkToOwner={handleTalkToOwner}
                     ownerPhone={pricingConfig.ownerPhone}
                     ownerSms={pricingConfig.ownerSms}
-                    onBuyWithLabor={() => handleBuyMaterial(true)}
-                    onBuyMaterialOnly={() => handleBuyMaterial(false)}
-                    onTalkToOwner={handleTalkToOwner}
+                    answered={isStepDone("material-quote")}
                 />
             )}
 

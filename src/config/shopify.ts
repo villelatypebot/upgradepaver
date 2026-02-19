@@ -39,12 +39,30 @@ const SHOPIFY_VARIANT_IDS: Record<string, string> = {
 };
 
 /**
- * Look up the Shopify variant ID for a product by name.
- * Uses case-insensitive matching.
+ * Look up the Shopify variant ID for a product by name or ID.
+ * Tries exact match first, then checks if any map key is contained
+ * in the input (handles DB names like "Union - Pavers" matching key "union").
+ * Matches longest key first to avoid partial collisions.
  */
-export function getShopifyVariantId(productName: string): string | null {
-    const key = productName.toLowerCase().trim();
-    return SHOPIFY_VARIANT_IDS[key] || null;
+export function getShopifyVariantId(productNameOrId: string): string | null {
+    if (!productNameOrId) return null;
+    const input = productNameOrId.toLowerCase().trim();
+
+    // 1. Exact match
+    if (SHOPIFY_VARIANT_IDS[input]) {
+        return SHOPIFY_VARIANT_IDS[input];
+    }
+
+    // 2. Fuzzy: check if any map key is contained in the input
+    //    Sort by key length descending so "templehurst-smooth" matches before "templehurst"
+    const sortedKeys = Object.keys(SHOPIFY_VARIANT_IDS).sort((a, b) => b.length - a.length);
+    for (const key of sortedKeys) {
+        if (input.includes(key)) {
+            return SHOPIFY_VARIANT_IDS[key];
+        }
+    }
+
+    return null;
 }
 
 /**

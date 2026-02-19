@@ -2,32 +2,42 @@
 
 import { ChatMessage } from "../chat-message";
 import { Button } from "@/components/ui/button";
-import { MaterialQuote } from "@/lib/pricing";
+import { MaterialQuote, LaborQuote } from "@/lib/pricing";
 import { formatCurrency } from "@/lib/pricing";
-import { ShoppingCart, HardHat, MapPin } from "lucide-react";
+import { ShoppingCart, MapPin, Phone, MessageCircle } from "lucide-react";
 import { DeliveryZone } from "@/config/pricing";
 import { cn } from "@/lib/utils";
 
 interface StepMaterialQuoteProps {
     quote: MaterialQuote | null;
+    laborQuote: LaborQuote | null;
     deliveryZones: DeliveryZone[];
     selectedZone: DeliveryZone | null;
     onDeliveryZoneChange: (zone: DeliveryZone) => void;
     onBuyMaterial: () => void;
-    onSeeLaborCost: () => void;
+    onBuyWithLabor: () => void;
+    onTalkToOwner: () => void;
+    ownerPhone: string;
+    ownerSms: string;
     answered: boolean;
 }
 
 export function StepMaterialQuote({
     quote,
+    laborQuote,
     deliveryZones,
     selectedZone,
     onDeliveryZoneChange,
     onBuyMaterial,
-    onSeeLaborCost,
+    onBuyWithLabor,
+    onTalkToOwner,
+    ownerPhone,
+    ownerSms,
     answered,
 }: StepMaterialQuoteProps) {
     if (!quote) return null;
+
+    const grandTotal = laborQuote ? quote.materialTotal + laborQuote.laborCost : quote.materialTotal;
 
     return (
         <>
@@ -55,8 +65,10 @@ export function StepMaterialQuote({
             </div>
 
             <ChatMessage type="bot">
-                <p className="font-semibold mb-3">Here&apos;s your material quote:</p>
+                <p className="font-semibold mb-3">Here&apos;s your complete quote:</p>
                 <div className="bg-muted/50 rounded-lg p-3 space-y-2 text-xs md:text-sm">
+                    {/* Material section */}
+                    <p className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Material</p>
                     <div className="flex justify-between gap-2">
                         <span className="text-muted-foreground">Product</span>
                         <span className="font-medium text-right">{quote.product.name} - {quote.variant.name}</span>
@@ -66,18 +78,9 @@ export function StepMaterialQuote({
                         <span className="text-right">{quote.areaSqft} sq ft (+{quote.wastePercentage}% = {quote.areaWithWaste} sq ft)</span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Per pallet</span>
-                        <span>{quote.sqftPerPallet} sq ft</span>
-                    </div>
-                    <div className="flex justify-between">
                         <span className="text-muted-foreground">Pallets needed</span>
-                        <span className="font-medium">{quote.palletsNeeded}</span>
+                        <span className="font-medium">{quote.palletsNeeded} x {formatCurrency(quote.pricePerPallet)}</span>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Price per pallet</span>
-                        <span>{formatCurrency(quote.pricePerPallet)}</span>
-                    </div>
-                    <hr className="border-border" />
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Material subtotal</span>
                         <span className="font-medium">{formatCurrency(quote.materialSubtotal)}</span>
@@ -88,24 +91,71 @@ export function StepMaterialQuote({
                     </div>
                     <hr className="border-border" />
                     <div className="flex justify-between text-sm md:text-base font-bold text-primary">
-                        <span>Total</span>
+                        <span>Material Total</span>
                         <span>{formatCurrency(quote.materialTotal)}</span>
                     </div>
+
+                    {/* Labor section */}
+                    {laborQuote && (
+                        <>
+                            <hr className="border-border my-2" />
+                            <p className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Installation Estimate</p>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Labor ({formatCurrency(laborQuote.laborRatePerSqft)}/sq ft)</span>
+                                <span className="font-medium">{formatCurrency(laborQuote.laborCost)}</span>
+                            </div>
+                            <hr className="border-border" />
+                            <div className="flex justify-between text-sm md:text-base font-bold text-primary">
+                                <span>Grand Total</span>
+                                <span>{formatCurrency(grandTotal)}</span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                                * Material charged at checkout. Installation arranged separately.
+                            </p>
+                        </>
+                    )}
                 </div>
             </ChatMessage>
 
             {!answered && (
                 <div className="flex flex-col items-center gap-3 mt-4 px-2">
-                    <Button onClick={onBuyMaterial} size="lg" className="w-full max-w-sm font-semibold shadow-lg">
+                    <Button onClick={onBuyWithLabor} size="lg" className="w-full max-w-sm font-semibold shadow-lg">
                         <ShoppingCart className="mr-2 h-4 w-4" />
-                        Add to Cart
+                        Add to Cart + Request Installation
                     </Button>
-                    <Button onClick={onSeeLaborCost} variant="outline" size="lg" className="w-full max-w-sm">
-                        <HardHat className="mr-2 h-4 w-4" />
-                        See Installation Cost
+                    <Button onClick={onBuyMaterial} variant="outline" size="lg" className="w-full max-w-sm">
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                        Add to Cart (Material Only)
+                    </Button>
+                    <p className="text-xs text-center text-muted-foreground max-w-sm">
+                        Installation is not charged at checkout. Our team will contact you to schedule and confirm labor costs.
+                    </p>
+                    <Button onClick={onTalkToOwner} variant="ghost" size="lg" className="w-full max-w-sm text-muted-foreground">
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Talk to Owner First
                     </Button>
                 </div>
             )}
+
+            <ChatMessage type="bot">
+                <p className="text-muted-foreground text-xs">
+                    Have questions? You can always reach us:
+                </p>
+                <div className="flex gap-3 mt-2">
+                    <a
+                        href={`tel:${ownerPhone}`}
+                        className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+                    >
+                        <Phone className="w-3 h-3" /> Call
+                    </a>
+                    <a
+                        href={`sms:${ownerSms}`}
+                        className="flex items-center gap-1.5 text-xs text-blue-600 hover:underline"
+                    >
+                        <MessageCircle className="w-3 h-3" /> SMS
+                    </a>
+                </div>
+            </ChatMessage>
         </>
     );
 }

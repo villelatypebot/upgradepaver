@@ -32,7 +32,7 @@ export function ChatMessage({ type, children, className, animate = true }: ChatM
         >
             {type === "bot" && (
                 <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden border bg-white shadow-sm mt-1">
-                    <img src="/logo.png" alt="Bot" className="w-full h-full object-contain p-1" />
+                    <img src="/chat-avatar.png" alt="Bot" className="w-full h-full object-cover" />
                 </div>
             )}
             <div
@@ -58,7 +58,7 @@ export function TypingIndicator() {
             transition={{ duration: 0.2 }}
         >
             <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden border bg-white shadow-sm mt-1">
-                <img src="/logo.png" alt="Bot" className="w-full h-full object-contain p-1" />
+                <img src="/chat-avatar.png" alt="Bot" className="w-full h-full object-cover" />
             </div>
             <div className="bg-white border border-border rounded-2xl rounded-tl-md px-4 py-3 shadow-sm">
                 <div className="flex gap-1.5 items-center h-5">
