@@ -73,7 +73,7 @@ export async function getPricingConfig(): Promise<PricingConfig> {
             laborRatePerSqft: data.labor_rate_per_sqft ?? DEFAULT_PRICING.laborRatePerSqft,
             wastePercentage: data.waste_percentage ?? DEFAULT_PRICING.wastePercentage,
             ownerPhone: data.owner_phone ?? DEFAULT_PRICING.ownerPhone,
-            ownerWhatsapp: data.owner_whatsapp ?? DEFAULT_PRICING.ownerWhatsapp,
+            ownerSms: data.owner_whatsapp ?? DEFAULT_PRICING.ownerSms,
             requireLeadCapture: data.require_lead_capture ?? DEFAULT_PRICING.requireLeadCapture,
         };
     } catch (error) {
@@ -91,7 +91,7 @@ export async function savePricingConfig(config: PricingConfig): Promise<PricingC
                 labor_rate_per_sqft: config.laborRatePerSqft,
                 waste_percentage: config.wastePercentage,
                 owner_phone: config.ownerPhone,
-                owner_whatsapp: config.ownerWhatsapp,
+                owner_whatsapp: config.ownerSms,
                 require_lead_capture: config.requireLeadCapture,
             });
 

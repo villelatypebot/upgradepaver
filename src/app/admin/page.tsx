@@ -457,7 +457,7 @@ export default function AdminPage() {
                                     <Label className="font-semibold mb-3 block">Contact</Label>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Phone</Label><Input value={pricingConfig.ownerPhone} onChange={e => setPricingConfig({ ...pricingConfig, ownerPhone: e.target.value })} /></div>
-                                        <div className="space-y-1"><Label className="text-xs text-muted-foreground">WhatsApp</Label><Input value={pricingConfig.ownerWhatsapp} onChange={e => setPricingConfig({ ...pricingConfig, ownerWhatsapp: e.target.value })} /></div>
+                                        <div className="space-y-1"><Label className="text-xs text-muted-foreground">SMS</Label><Input value={pricingConfig.ownerSms} onChange={e => setPricingConfig({ ...pricingConfig, ownerSms: e.target.value })} /></div>
                                     </div>
                                 </div>
                                 <div className="border-t pt-4 flex items-center justify-between">

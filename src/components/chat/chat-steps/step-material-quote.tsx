@@ -98,7 +98,7 @@ export function StepMaterialQuote({
                 <div className="flex flex-col items-center gap-3 mt-4 px-2">
                     <Button onClick={onBuyMaterial} size="lg" className="w-full max-w-sm font-semibold shadow-lg">
                         <ShoppingCart className="mr-2 h-4 w-4" />
-                        Buy Material
+                        Add to Cart
                     </Button>
                     <Button onClick={onSeeLaborCost} variant="outline" size="lg" className="w-full max-w-sm">
                         <HardHat className="mr-2 h-4 w-4" />

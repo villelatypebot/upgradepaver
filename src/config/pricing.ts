@@ -12,7 +12,7 @@ export interface PricingConfig {
     laborRatePerSqft: number;
     wastePercentage: number;
     ownerPhone: string;
-    ownerWhatsapp: string;
+    ownerSms: string;
     requireLeadCapture: boolean;
 }
 
@@ -20,7 +20,7 @@ export const DEFAULT_PRICING: PricingConfig = {
     laborRatePerSqft: 8.00,
     wastePercentage: 10,
     ownerPhone: '+18138191450',
-    ownerWhatsapp: '+18138191450',
+    ownerSms: '+18138191450',
     requireLeadCapture: true,
 };
 

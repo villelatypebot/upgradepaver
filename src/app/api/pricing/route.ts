@@ -20,7 +20,7 @@ export async function POST(req: Request) {
             laborRatePerSqft: Number(body.laborRatePerSqft),
             wastePercentage: Number(body.wastePercentage),
             ownerPhone: String(body.ownerPhone || ''),
-            ownerWhatsapp: String(body.ownerWhatsapp || ''),
+            ownerSms: String(body.ownerSms || body.ownerWhatsapp || ''),
             requireLeadCapture: body.requireLeadCapture !== false,
         };
         const saved = await savePricingConfig(config);

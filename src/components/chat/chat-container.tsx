@@ -15,6 +15,7 @@ import { PaverProduct, PaverVariant, ManufacturerId } from "@/config/pavers";
 import { PricingConfig, DEFAULT_PRICING, DeliveryZone } from "@/config/pricing";
 import { calculateMaterialQuote, calculateLaborQuote, MaterialQuote, LaborQuote } from "@/lib/pricing";
 import { trackEvent, getSessionId, EVENTS } from "@/lib/analytics";
+import { getShopifyVariantId, buildCartUrl, SHOPIFY_STORE_URL } from "@/config/shopify";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
@@ -279,13 +280,47 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
         }
     };
 
-    const handleBuyMaterial = () => {
-        trackEvent(EVENTS.CTA_CLICKED, { type: 'buy_material' });
+    const handleBuyMaterial = (withLabor: boolean = false) => {
+        trackEvent(EVENTS.CTA_CLICKED, { type: withLabor ? 'buy_with_labor' : 'buy_material' });
         const lastDone = [...photoEntries].reverse().find(e => e.done);
-        if (lastDone?.variant?.shopifyUrl) {
-            window.open(lastDone.variant.shopifyUrl, '_blank');
+
+        if (!lastDone?.product) {
+            window.open(SHOPIFY_STORE_URL, '_blank');
+            return;
+        }
+
+        // Try name first (map is keyed by product name), then ID as fallback
+        const variantId = getShopifyVariantId(lastDone.product.name) || getShopifyVariantId(lastDone.product.id);
+
+        if (!variantId) {
+            if (lastDone.variant?.shopifyUrl) {
+                window.open(lastDone.variant.shopifyUrl, '_blank');
+            } else {
+                window.open(SHOPIFY_STORE_URL, '_blank');
+            }
+            return;
+        }
+
+        const quantity = materialQuote?.palletsNeeded || 1;
+
+        let note: string | undefined;
+        if (withLabor && laborQuote) {
+            const leadInfo = leadData ? `Customer: ${leadData.name}, ${leadData.email}` : '';
+            note = [
+                'INSTALLATION REQUESTED',
+                `Area: ${laborQuote.areaSqft} sq ft`,
+                `Estimated labor: $${laborQuote.laborCost.toFixed(2)}`,
+                `Labor rate: $${laborQuote.laborRatePerSqft}/sq ft`,
+                leadInfo,
+                leadData?.phone ? `Phone: ${leadData.phone}` : '',
+            ].filter(Boolean).join(' | ');
+        }
+
+        const cartUrl = buildCartUrl(variantId, quantity, note);
+        if (cartUrl) {
+            window.open(cartUrl, '_blank');
         } else {
-            window.open('https://directpavers.com', '_blank');
+            window.open(SHOPIFY_STORE_URL, '_blank');
         }
     };
 
@@ -298,19 +333,24 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
     };
 
     const handleTalkToOwner = () => {
-        trackEvent(EVENTS.CTA_CLICKED, { type: 'whatsapp' });
-        const phone = pricingConfig.ownerWhatsapp.replace(/[^0-9]/g, '');
+        trackEvent(EVENTS.CTA_CLICKED, { type: 'sms' });
+        const phone = pricingConfig.ownerSms || pricingConfig.ownerPhone;
+        if (!phone) {
+            toast.error("Contact number not available.");
+            return;
+        }
         const doneEntries = photoEntries.filter(e => e.done);
-        const productList = doneEntries.map(e => `- ${e.product?.name} (${e.variant?.name})`).join('\n');
-        const leadInfo = leadData ? `Name: ${leadData.name}\nEmail: ${leadData.email}\n` : '';
-        const message = encodeURIComponent(
-            `Hi! I'm interested in a paver project.\n` +
-            `${leadInfo}` +
-            `Products:\n${productList}\n` +
-            `Area: ${width * length} sq ft\n` +
-            `Can we discuss the details?`
-        );
-        window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+        const productList = doneEntries.map(e => `${e.product?.name} (${e.variant?.name})`).join(', ');
+        const leadInfo = leadData ? `${leadData.name}, ${leadData.email}` : '';
+        const parts = [
+            'Hi! I\'m interested in a paver project.',
+            leadInfo ? `${leadInfo}.` : '',
+            productList ? `Products: ${productList}.` : '',
+            width && length ? `Area: ${width * length} sq ft.` : '',
+            'Can we discuss the details?',
+        ].filter(Boolean).join(' ');
+        const message = encodeURIComponent(parts);
+        window.open(`sms:${phone}?body=${message}`);
     };
 
     const handleRestart = () => {
@@ -491,12 +531,9 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                     materialQuote={materialQuote}
                     laborQuote={laborQuote}
                     ownerPhone={pricingConfig.ownerPhone}
-                    ownerWhatsapp={pricingConfig.ownerWhatsapp}
-                    onBuyWithLabor={() => {
-                        handleBuyMaterial();
-                        handleTalkToOwner();
-                    }}
-                    onBuyMaterialOnly={handleBuyMaterial}
+                    ownerSms={pricingConfig.ownerSms}
+                    onBuyWithLabor={() => handleBuyMaterial(true)}
+                    onBuyMaterialOnly={() => handleBuyMaterial(false)}
                     onTalkToOwner={handleTalkToOwner}
                 />
             )}
