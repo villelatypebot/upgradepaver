@@ -377,25 +377,11 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
     const donePhotoEntries = photoEntries.filter(e => e.done);
 
     return (
+        <div className="flex-1 flex flex-col min-h-0">
         <div
             ref={scrollRef}
             className="flex-1 overflow-y-auto px-3 md:px-4 py-4 md:py-6 space-y-3 md:space-y-4 scroll-smooth"
         >
-            {/* Restart button */}
-            {currentStep !== "welcome" && (
-                <div className="flex justify-end">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleRestart}
-                        className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                        <RotateCcw className="mr-1.5 h-3 w-3" />
-                        Start Over
-                    </Button>
-                </div>
-            )}
-
             {/* Welcome */}
             {(isStepActive("welcome") || isStepDone("welcome")) && (
                 <StepWelcome
@@ -543,6 +529,22 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
 
             {/* Bottom spacing */}
             <div className="h-4" />
+        </div>
+
+        {/* Start Over - fixed at bottom */}
+        {currentStep !== "welcome" && (
+            <div className="flex-shrink-0 border-t bg-background/95 backdrop-blur px-3 md:px-4 py-2 flex justify-center">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRestart}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                    <RotateCcw className="mr-1.5 h-3 w-3" />
+                    Start Over
+                </Button>
+            </div>
+        )}
         </div>
     );
 }
