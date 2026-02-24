@@ -21,10 +21,16 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        if (body.googleAiApiKey) {
-            await saveConfig({ googleAiApiKey: body.googleAiApiKey });
-            return NextResponse.json({ success: true, message: 'API Key updated' });
+
+        const updates: any = {};
+        if (body.googleAiApiKey !== undefined) updates.googleAiApiKey = body.googleAiApiKey;
+        if (body.webhookUrl !== undefined) updates.webhookUrl = body.webhookUrl;
+
+        if (Object.keys(updates).length > 0) {
+            await saveConfig(updates);
+            return NextResponse.json({ success: true, message: 'Config updated' });
         }
+
         return NextResponse.json({ error: 'Invalid config' }, { status: 400 });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to save config' }, { status: 500 });

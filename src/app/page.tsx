@@ -12,6 +12,8 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function Home() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -24,6 +26,10 @@ export default function Home() {
 
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userPhone, setUserPhone] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -80,6 +86,42 @@ export default function Home() {
       toast.error(error.message || "Failed to generate simulation.");
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleConfirmLabor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userName || !userPhone) {
+      toast.error("Por favor, preencha nome e telefone.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        name: userName,
+        phone: userPhone,
+        manufacturer: activeManufacturer,
+        productName: selectedProduct?.name,
+        variantName: selectedVariant?.name,
+      };
+
+      const res = await fetch('/api/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao enviar confirmação');
+
+      toast.success("Solicitação enviada com sucesso!");
+      setIsSubmitted(true);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Falha ao enviar solicitação.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -294,24 +336,37 @@ export default function Home() {
               )}
             </div>
 
-            <div className="bg-card p-4 md:p-6 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6 shadow-sm">
-              <div>
-                <h3 className="font-semibold text-base md:text-lg">Love this look?</h3>
-                <p className="text-sm text-muted-foreground">Get an instant quote with material & installation costs.</p>
-              </div>
-              <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto">
-                <Link href="/quote" className="flex-1 md:flex-none">
-                  <Button size="lg" className="px-6 md:px-8 font-semibold w-full">
-                    <DollarSign className="mr-2 h-4 w-4" />
-                    Get Your Quote
-                  </Button>
-                </Link>
-                <Button size="lg" variant="outline" className="px-4 md:px-6 flex-1 md:flex-none" asChild>
-                  <a href="https://directpavers.com" target="_blank" rel="noopener noreferrer">
-                    Shop Online
-                  </a>
-                </Button>
-              </div>
+            <div className="bg-card p-6 rounded-xl border shadow-sm">
+              {!isSubmitted ? (
+                <div className="flex flex-col gap-6">
+                  <div>
+                    <h3 className="font-semibold text-lg">Gostou do resultado? Confirme a Mão de Obra!</h3>
+                    <p className="text-muted-foreground">Preencha seus dados para entrarmos em contato com as informações sobre o seu projeto.</p>
+                  </div>
+                  <form onSubmit={handleConfirmLabor} className="flex flex-col md:flex-row items-end gap-4 w-full">
+                    <div className="space-y-2 flex-1 w-full">
+                      <Label>Nome Completo</Label>
+                      <Input placeholder="Seu nome" value={userName} onChange={e => setUserName(e.target.value)} disabled={isSubmitting} />
+                    </div>
+                    <div className="space-y-2 flex-1 w-full">
+                      <Label>Telefone / WhatsApp</Label>
+                      <Input placeholder="(11) 99999-9999" value={userPhone} onChange={e => setUserPhone(e.target.value)} disabled={isSubmitting} />
+                    </div>
+                    <Button type="submit" size="lg" className="w-full md:w-auto px-8 font-semibold" disabled={isSubmitting}>
+                      {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+                      Confirmar Mão de Obra
+                    </Button>
+                  </form>
+                </div>
+              ) : (
+                <div className="text-center py-6 space-y-4">
+                  <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
+                    <Check className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-semibold text-xl text-green-700">Solicitação Recebida com Sucesso!</h3>
+                  <p className="text-muted-foreground">Em breve nossa equipe entrará em contato pelo telefone informado.</p>
+                </div>
+              )}
             </div>
           </div>
         )}

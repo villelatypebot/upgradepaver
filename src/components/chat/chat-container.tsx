@@ -72,13 +72,13 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
         getProducts().then(setProducts);
         fetch('/api/pricing').then(r => r.json()).then(data => {
             if (data && !data.error) setPricingConfig(data);
-        }).catch(() => {});
+        }).catch(() => { });
         fetch('/api/delivery-zones').then(r => r.json()).then(data => {
             if (Array.isArray(data) && data.length > 0) {
                 setDeliveryZones(data);
                 setSelectedZone(data[0]);
             }
-        }).catch(() => {});
+        }).catch(() => { });
         // Analytics
         trackEvent(EVENTS.SESSION_STARTED);
         trackEvent(EVENTS.PAGE_VIEW, { page: 'quote' });
@@ -283,9 +283,34 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
         }
     };
 
-    const handleBuyMaterial = (withLabor: boolean = false) => {
-        trackEvent(EVENTS.CTA_CLICKED, { type: withLabor ? 'buy_with_labor' : 'buy_material' });
+    const handleBuyMaterial = async (withLabor: boolean = false) => {
+        const type = withLabor ? 'buy_with_labor' : 'buy_material';
+        trackEvent(EVENTS.CTA_CLICKED, { type });
         const lastDone = [...photoEntries].reverse().find(e => e.done);
+
+        // Fire webhook asynchronously
+        if (leadData && lastDone?.product && lastDone?.variant && materialQuote) {
+            const payload = {
+                name: leadData.name,
+                email: leadData.email,
+                phone: leadData.phone || "",
+                manufacturer: activeManufacturer,
+                productName: lastDone.product.name,
+                variantName: lastDone.variant.name,
+                quoteType: type,
+                areaSqft: materialQuote.areaSqft,
+                materialTotal: materialQuote.materialTotal,
+                palletsNeeded: materialQuote.palletsNeeded,
+                laborCost: laborQuote ? laborQuote.laborCost : 0,
+                grandTotal: materialQuote.materialTotal + (laborQuote ? laborQuote.laborCost : 0),
+            };
+
+            fetch('/api/webhook', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(e => console.error("Webhook error:", e));
+        }
 
         if (!lastDone?.product) {
             window.open(SHOPIFY_STORE_URL, '_blank');
@@ -374,164 +399,164 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
 
     return (
         <div className="flex-1 flex flex-col min-h-0">
-        <div
-            ref={scrollRef}
-            className="flex-1 overflow-y-auto px-3 md:px-4 py-4 md:py-6 space-y-3 md:space-y-4 scroll-smooth"
-        >
-            {/* Welcome */}
-            {(isStepActive("welcome") || isStepDone("welcome")) && (
-                <StepWelcome
-                    onStart={() => advanceStep("photos")}
-                    answered={isStepDone("welcome")}
-                />
-            )}
-
-            {/* Photos */}
-            {(isStepActive("photos") || isStepDone("photos")) && (
-                <StepPhotos
-                    photos={photos}
-                    onPhotosChange={setPhotos}
-                    onContinue={() => advanceStep("measurements")}
-                    answered={isStepDone("photos")}
-                />
-            )}
-
-            {/* Measurements */}
-            {(isStepActive("measurements") || isStepDone("measurements")) && (
-                <StepMeasurements
-                    width={width}
-                    length={length}
-                    onMeasurementsChange={(w, l) => { setWidth(w); setLength(l); }}
-                    onContinue={handlePhotosConfirmed}
-                    answered={isStepDone("measurements")}
-                />
-            )}
-
-            {/* Lead Capture */}
-            {(isStepActive("lead-capture") || isStepDone("lead-capture")) && (
-                <StepLeadCapture
-                    onSubmit={handleLeadSubmit}
-                    onSkip={handleLeadSkip}
-                    answered={isStepDone("lead-capture")}
-                    answeredData={leadData}
-                    isRequired={pricingConfig.requireLeadCapture}
-                />
-            )}
-
-            {/* Per-photo: show completed photo entries */}
-            {donePhotoEntries.map((entry, i) => (
-                <div key={`done-photo-${i}`}>
-                    <ChatMessage type="bot">
-                        <p className="font-medium text-xs text-muted-foreground mb-1">Photo {i + 1} of {photoEntries.length}</p>
-                        <p>Choose your paver style and color.</p>
-                    </ChatMessage>
-                    <ChatMessage type="user">
-                        <div className="flex items-center gap-3">
-                            <img src={entry.variant?.textureUrl} alt="" className="w-10 h-10 rounded-lg object-cover border" />
-                            <div>
-                                <p className="font-medium text-sm">{entry.product?.name}</p>
-                                <p className="text-xs opacity-80">{entry.variant?.name}</p>
-                            </div>
-                        </div>
-                    </ChatMessage>
-                    {entry.generatedImage && (
-                        <>
-                            <ChatMessage type="bot">
-                                <p className="text-sm">Here&apos;s your visualization for photo {i + 1}!</p>
-                            </ChatMessage>
-                            <div className="mx-2 rounded-xl overflow-hidden border shadow-sm">
-                                <img src={entry.generatedImage} alt={`Simulation ${i + 1}`} className="w-full" />
-                            </div>
-                            <ChatMessage type="user">Approved!</ChatMessage>
-                        </>
-                    )}
-                </div>
-            ))}
-
-            {/* Current photo: Product Selection */}
-            {(isStepActive("photo-product")) && currentPhotoEntry && (
-                <>
-                    <ChatMessage type="bot">
-                        <div className="flex items-start gap-3">
-                            <img src={currentPhotoEntry.photo} alt={`Photo ${currentPhotoIndex + 1}`} className="w-16 h-16 rounded-lg object-cover border flex-shrink-0" />
-                            <div>
-                                <p className="font-semibold text-sm">Photo {currentPhotoIndex + 1} of {photoEntries.length}</p>
-                                <p className="text-muted-foreground text-xs mt-1">Choose a paver style and color for this area.</p>
-                            </div>
-                        </div>
-                    </ChatMessage>
-                    <StepProductSelect
-                        products={products}
-                        activeManufacturer={activeManufacturer}
-                        selectedProduct={selectedProduct}
-                        selectedVariant={selectedVariant}
-                        onManufacturerChange={(id) => {
-                            setActiveManufacturer(id);
-                            setSelectedProduct(null);
-                            setSelectedVariant(null);
-                        }}
-                        onProductSelect={handleProductSelect}
-                        onVariantSelect={setSelectedVariant}
-                        onGenerate={handleGenerate}
-                        answered={false}
+            <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto px-3 md:px-4 py-4 md:py-6 space-y-3 md:space-y-4 scroll-smooth"
+            >
+                {/* Welcome */}
+                {(isStepActive("welcome") || isStepDone("welcome")) && (
+                    <StepWelcome
+                        onStart={() => advanceStep("photos")}
+                        answered={isStepDone("welcome")}
                     />
-                </>
-            )}
+                )}
 
-            {/* Current photo: Simulation */}
-            {(isStepActive("photo-simulation")) && currentPhotoEntry && selectedProduct && selectedVariant && (
-                <StepSimulation
-                    originalImage={currentPhotoEntry.photo}
-                    generatedImage={generatedImage}
-                    isGenerating={isGenerating}
-                    product={selectedProduct}
-                    variant={selectedVariant}
-                    onShowQuote={handleShowQuote}
-                    onTryAnother={handleTryAnother}
-                    onDownload={handleDownload}
-                    answered={false}
-                    isLastPhoto={currentPhotoIndex === photoEntries.length - 1}
-                />
-            )}
+                {/* Photos */}
+                {(isStepActive("photos") || isStepDone("photos")) && (
+                    <StepPhotos
+                        photos={photos}
+                        onPhotosChange={setPhotos}
+                        onContinue={() => advanceStep("measurements")}
+                        answered={isStepDone("photos")}
+                    />
+                )}
 
-            {/* Material + Labor Quote (unified) */}
-            {(isStepActive("material-quote") || isStepDone("material-quote")) && (
-                <StepMaterialQuote
-                    quote={materialQuote}
-                    laborQuote={laborQuote}
-                    deliveryZones={deliveryZones}
-                    selectedZone={selectedZone}
-                    onDeliveryZoneChange={handleDeliveryZoneChange}
-                    onBuyMaterial={() => handleBuyMaterial(false)}
-                    onBuyWithLabor={() => handleBuyMaterial(true)}
-                    onTalkToOwner={handleTalkToOwner}
-                    ownerPhone={pricingConfig.ownerPhone}
-                    ownerSms={pricingConfig.ownerSms}
-                    answered={isStepDone("material-quote")}
-                />
-            )}
+                {/* Measurements */}
+                {(isStepActive("measurements") || isStepDone("measurements")) && (
+                    <StepMeasurements
+                        width={width}
+                        length={length}
+                        onMeasurementsChange={(w, l) => { setWidth(w); setLength(l); }}
+                        onContinue={handlePhotosConfirmed}
+                        answered={isStepDone("measurements")}
+                    />
+                )}
 
-            {/* Typing indicator */}
-            {isTyping && <TypingIndicator />}
+                {/* Lead Capture */}
+                {(isStepActive("lead-capture") || isStepDone("lead-capture")) && (
+                    <StepLeadCapture
+                        onSubmit={handleLeadSubmit}
+                        onSkip={handleLeadSkip}
+                        answered={isStepDone("lead-capture")}
+                        answeredData={leadData}
+                        isRequired={pricingConfig.requireLeadCapture}
+                    />
+                )}
 
-            {/* Bottom spacing */}
-            <div className="h-4" />
-        </div>
+                {/* Per-photo: show completed photo entries */}
+                {donePhotoEntries.map((entry, i) => (
+                    <div key={`done-photo-${i}`}>
+                        <ChatMessage type="bot">
+                            <p className="font-medium text-xs text-muted-foreground mb-1">Photo {i + 1} of {photoEntries.length}</p>
+                            <p>Choose your paver style and color.</p>
+                        </ChatMessage>
+                        <ChatMessage type="user">
+                            <div className="flex items-center gap-3">
+                                <img src={entry.variant?.textureUrl} alt="" className="w-10 h-10 rounded-lg object-cover border" />
+                                <div>
+                                    <p className="font-medium text-sm">{entry.product?.name}</p>
+                                    <p className="text-xs opacity-80">{entry.variant?.name}</p>
+                                </div>
+                            </div>
+                        </ChatMessage>
+                        {entry.generatedImage && (
+                            <>
+                                <ChatMessage type="bot">
+                                    <p className="text-sm">Here&apos;s your visualization for photo {i + 1}!</p>
+                                </ChatMessage>
+                                <div className="mx-2 rounded-xl overflow-hidden border shadow-sm">
+                                    <img src={entry.generatedImage} alt={`Simulation ${i + 1}`} className="w-full" />
+                                </div>
+                                <ChatMessage type="user">Approved!</ChatMessage>
+                            </>
+                        )}
+                    </div>
+                ))}
 
-        {/* Start Over - fixed at bottom */}
-        {currentStep !== "welcome" && (
-            <div className="flex-shrink-0 border-t bg-background/95 backdrop-blur px-3 md:px-4 py-2 flex justify-center">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleRestart}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                    <RotateCcw className="mr-1.5 h-3 w-3" />
-                    Start Over
-                </Button>
+                {/* Current photo: Product Selection */}
+                {(isStepActive("photo-product")) && currentPhotoEntry && (
+                    <>
+                        <ChatMessage type="bot">
+                            <div className="flex items-start gap-3">
+                                <img src={currentPhotoEntry.photo} alt={`Photo ${currentPhotoIndex + 1}`} className="w-16 h-16 rounded-lg object-cover border flex-shrink-0" />
+                                <div>
+                                    <p className="font-semibold text-sm">Photo {currentPhotoIndex + 1} of {photoEntries.length}</p>
+                                    <p className="text-muted-foreground text-xs mt-1">Choose a paver style and color for this area.</p>
+                                </div>
+                            </div>
+                        </ChatMessage>
+                        <StepProductSelect
+                            products={products}
+                            activeManufacturer={activeManufacturer}
+                            selectedProduct={selectedProduct}
+                            selectedVariant={selectedVariant}
+                            onManufacturerChange={(id) => {
+                                setActiveManufacturer(id);
+                                setSelectedProduct(null);
+                                setSelectedVariant(null);
+                            }}
+                            onProductSelect={handleProductSelect}
+                            onVariantSelect={setSelectedVariant}
+                            onGenerate={handleGenerate}
+                            answered={false}
+                        />
+                    </>
+                )}
+
+                {/* Current photo: Simulation */}
+                {(isStepActive("photo-simulation")) && currentPhotoEntry && selectedProduct && selectedVariant && (
+                    <StepSimulation
+                        originalImage={currentPhotoEntry.photo}
+                        generatedImage={generatedImage}
+                        isGenerating={isGenerating}
+                        product={selectedProduct}
+                        variant={selectedVariant}
+                        onShowQuote={handleShowQuote}
+                        onTryAnother={handleTryAnother}
+                        onDownload={handleDownload}
+                        answered={false}
+                        isLastPhoto={currentPhotoIndex === photoEntries.length - 1}
+                    />
+                )}
+
+                {/* Material + Labor Quote (unified) */}
+                {(isStepActive("material-quote") || isStepDone("material-quote")) && (
+                    <StepMaterialQuote
+                        quote={materialQuote}
+                        laborQuote={laborQuote}
+                        deliveryZones={deliveryZones}
+                        selectedZone={selectedZone}
+                        onDeliveryZoneChange={handleDeliveryZoneChange}
+                        onBuyMaterial={() => handleBuyMaterial(false)}
+                        onBuyWithLabor={() => handleBuyMaterial(true)}
+                        onTalkToOwner={handleTalkToOwner}
+                        ownerPhone={pricingConfig.ownerPhone}
+                        ownerSms={pricingConfig.ownerSms}
+                        answered={isStepDone("material-quote")}
+                    />
+                )}
+
+                {/* Typing indicator */}
+                {isTyping && <TypingIndicator />}
+
+                {/* Bottom spacing */}
+                <div className="h-4" />
             </div>
-        )}
+
+            {/* Start Over - fixed at bottom */}
+            {currentStep !== "welcome" && (
+                <div className="flex-shrink-0 border-t bg-background/95 backdrop-blur px-3 md:px-4 py-2 flex justify-center">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRestart}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                        <RotateCcw className="mr-1.5 h-3 w-3" />
+                        Start Over
+                    </Button>
+                </div>
+            )}
         </div>
     );
 }

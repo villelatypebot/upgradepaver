@@ -3,6 +3,7 @@ import { supabaseAdmin } from './supabase';
 
 interface ServerConfig {
     googleAiApiKey?: string;
+    webhookUrl?: string;
 }
 
 interface ActivityLog {
