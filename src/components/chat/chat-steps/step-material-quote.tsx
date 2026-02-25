@@ -90,8 +90,11 @@ export function StepMaterialQuote({
                         <span>{formatCurrency(quote.deliveryFee)}</span>
                     </div>
                     <hr className="border-border" />
-                    <div className="flex justify-between text-sm md:text-base font-bold text-primary">
-                        <span>Material Total</span>
+                    <div className="flex justify-between text-sm md:text-base font-bold text-primary items-center">
+                        <div className="flex flex-col">
+                            <span>Material Total</span>
+                            <span className="text-[10px] font-normal text-muted-foreground leading-tight">+ Payment Fee</span>
+                        </div>
                         <span>{formatCurrency(quote.materialTotal)}</span>
                     </div>
 
@@ -105,8 +108,11 @@ export function StepMaterialQuote({
                                 <span className="font-medium">{formatCurrency(laborQuote.laborCost)}</span>
                             </div>
                             <hr className="border-border" />
-                            <div className="flex justify-between text-sm md:text-base font-bold text-primary">
-                                <span>Grand Total</span>
+                            <div className="flex justify-between text-sm md:text-base font-bold text-primary items-center">
+                                <div className="flex flex-col">
+                                    <span>Grand Total</span>
+                                    <span className="text-[10px] font-normal text-muted-foreground leading-tight">+ Payment Fee</span>
+                                </div>
                                 <span>{formatCurrency(grandTotal)}</span>
                             </div>
                             <p className="text-[10px] text-muted-foreground mt-1">
