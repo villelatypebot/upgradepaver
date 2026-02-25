@@ -65,7 +65,8 @@ export function calculateLaborQuote(
     areaSqft: number,
     pricing: PricingConfig = DEFAULT_PRICING
 ): LaborQuote {
-    const laborCost = areaSqft * pricing.laborRatePerSqft;
+    const MINIMUM_LABOR_COST = 1500;
+    const laborCost = Math.max(areaSqft * pricing.laborRatePerSqft, MINIMUM_LABOR_COST);
     return {
         areaSqft,
         laborRatePerSqft: pricing.laborRatePerSqft,

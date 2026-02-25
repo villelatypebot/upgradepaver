@@ -33,6 +33,37 @@ const NAV_ITEMS: { id: AdminTab; label: string; icon: any }[] = [
     { id: "settings", label: "Settings", icon: Settings },
 ];
 
+function EmbedCodeCard() {
+    const [embedWidth, setEmbedWidth] = useState("100%");
+    const [embedHeight, setEmbedHeight] = useState("700px");
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const embedCode = `<iframe src="${origin}/embed" width="${embedWidth}" height="${embedHeight}" style="border:none;border-radius:12px;overflow:hidden" allowfullscreen></iframe>`;
+
+    return (
+        <Card>
+            <CardHeader><CardTitle>Embed Code</CardTitle><CardDescription>Customize the dimensions and copy the code to embed on any website.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <Label className="text-xs">Width</Label>
+                        <Input value={embedWidth} onChange={e => setEmbedWidth(e.target.value)} placeholder="e.g. 100%, 800px, 50vw" className="font-mono text-xs" />
+                    </div>
+                    <div className="space-y-1">
+                        <Label className="text-xs">Height</Label>
+                        <Input value={embedHeight} onChange={e => setEmbedHeight(e.target.value)} placeholder="e.g. 700px, 100vh, 600px" className="font-mono text-xs" />
+                    </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Supports any CSS unit: px, %, vh, vw, etc. The embed adapts to the container.</p>
+                <div className="bg-muted p-3 rounded text-xs font-mono break-all relative group">
+                    {embedCode}
+                    <Button size="sm" variant="secondary" className="absolute top-1 right-1 h-6 text-xs opacity-0 group-hover:opacity-100" onClick={() => { navigator.clipboard.writeText(embedCode); toast.success("Copied!"); }}>Copy</Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function AdminPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState("");
@@ -580,15 +611,7 @@ export default function AdminPage() {
                                     <p className="text-xs text-muted-foreground">This Webhook will receive the lead data when confirmed.</p>
                                 </CardContent>
                             </Card>
-                            <Card>
-                                <CardHeader><CardTitle>Embed Code</CardTitle></CardHeader>
-                                <CardContent>
-                                    <div className="bg-muted p-3 rounded text-xs font-mono break-all relative group">
-                                        {`<iframe src="${typeof window !== 'undefined' ? window.location.origin : ''}/embed" width="100%" height="600px" style="border:none;border-radius:12px"></iframe>`}
-                                        <Button size="sm" variant="secondary" className="absolute top-1 right-1 h-6 text-xs opacity-0 group-hover:opacity-100" onClick={() => { navigator.clipboard.writeText(`<iframe src="${window.location.origin}/embed" width="100%" height="600px" style="border:none;border-radius:12px;overflow:hidden"></iframe>`); toast.success("Copied!"); }}>Copy</Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <EmbedCodeCard />
                         </div>
                     )}
 
