@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Smartphone, Ruler, Navigation2, ChevronRight, X } from "lucide-react";
+import { Smartphone, Ruler, Trees, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface HowToMeasureGuideProps {
@@ -11,7 +11,7 @@ interface HowToMeasureGuideProps {
 }
 
 export function HowToMeasureGuide({ isOpen, onClose }: HowToMeasureGuideProps) {
-    const [activeTab, setActiveTab] = useState<"phone" | "tape">("phone");
+    const [activeTab, setActiveTab] = useState<"phone" | "tape" | "outdoor">("phone");
     const [step, setStep] = useState(0);
 
     // Auto-advance steps for animation
@@ -52,8 +52,8 @@ export function HowToMeasureGuide({ isOpen, onClose }: HowToMeasureGuideProps) {
                                 className="absolute inset-y-1 bg-primary rounded-xl"
                                 initial={false}
                                 animate={{
-                                    left: activeTab === "phone" ? "4px" : "calc(50% + 2px)",
-                                    width: "calc(50% - 6px)"
+                                    left: activeTab === "phone" ? "4px" : activeTab === "tape" ? "calc(33.33% + 1px)" : "calc(66.66% - 2px)",
+                                    width: "calc(33.33% - 2px)"
                                 }}
                                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
                             />
@@ -61,22 +61,32 @@ export function HowToMeasureGuide({ isOpen, onClose }: HowToMeasureGuideProps) {
                             <button
                                 onClick={() => { setActiveTab("phone"); setStep(0); }}
                                 className={cn(
-                                    "flex-1 flex items-center justify-center gap-2 py-2.5 z-10 text-sm font-medium transition-colors rounded-xl",
+                                    "flex-1 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-2 md:py-2.5 z-10 text-[10px] md:text-sm font-medium transition-colors rounded-xl",
                                     activeTab === "phone" ? "text-primary-foreground" : "text-slate-400 hover:text-white"
                                 )}
                             >
                                 <Smartphone className="w-4 h-4" />
-                                Measuring App
+                                <span>Phone App</span>
                             </button>
                             <button
                                 onClick={() => { setActiveTab("tape"); setStep(0); }}
                                 className={cn(
-                                    "flex-1 flex items-center justify-center gap-2 py-2.5 z-10 text-sm font-medium transition-colors rounded-xl",
+                                    "flex-1 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-2 md:py-2.5 z-10 text-[10px] md:text-sm font-medium transition-colors rounded-xl",
                                     activeTab === "tape" ? "text-primary-foreground" : "text-slate-400 hover:text-white"
                                 )}
                             >
                                 <Ruler className="w-4 h-4" />
-                                Tape Measure
+                                <span>Tape Measure</span>
+                            </button>
+                            <button
+                                onClick={() => { setActiveTab("outdoor"); setStep(0); }}
+                                className={cn(
+                                    "flex-1 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-2 md:py-2.5 z-10 text-[10px] md:text-sm font-medium transition-colors rounded-xl",
+                                    activeTab === "outdoor" ? "text-primary-foreground" : "text-slate-400 hover:text-white"
+                                )}
+                            >
+                                <Trees className="w-4 h-4" />
+                                <span>Complex Shape</span>
                             </button>
                         </div>
 
@@ -85,8 +95,10 @@ export function HowToMeasureGuide({ isOpen, onClose }: HowToMeasureGuideProps) {
                             <AnimatePresence mode="wait">
                                 {activeTab === "phone" ? (
                                     <PhoneAnimation key="phone" step={step} />
-                                ) : (
+                                ) : activeTab === "tape" ? (
                                     <TapeAnimation key="tape" step={step} />
+                                ) : (
+                                    <OutdoorAnimation key="outdoor" step={step} />
                                 )}
                             </AnimatePresence>
                         </div>
@@ -289,6 +301,95 @@ function TapeAnimation({ step }: { step: number }) {
                             className="absolute bg-white text-slate-900 font-bold px-3 py-1 rounded-full text-xs shadow-xl top-0 translate-x-4"
                         >
                             25 ft 4 in
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            <motion.p
+                key={titles[step]}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center font-medium font-sm text-slate-200"
+            >
+                {titles[step]}
+            </motion.p>
+        </motion.div>
+    );
+}
+
+function OutdoorAnimation({ step }: { step: number }) {
+    const titles = [
+        "Divide complex spaces",
+        "Measure rectangles separately",
+        "Add totals together"
+    ];
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="flex flex-col items-center justify-center w-full h-full p-6"
+        >
+            <div className="relative w-full max-w-[200px] h-32 mb-6 flex items-center justify-center mt-2">
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+                    {/* Grass background */}
+                    <rect x="10" y="10" width="180" height="100" fill="#0f172a" rx="8" />
+
+                    {/* House wall */}
+                    <rect x="40" y="8" width="120" height="15" fill="#334155" rx="2" />
+
+                    {/* Entire Patio Shape (L-shape) */}
+                    <path
+                        d="M 40 23 L 160 23 L 160 70 L 100 70 L 100 100 L 40 100 Z"
+                        fill="#1e293b"
+                        stroke="#475569"
+                        strokeWidth="2"
+                    />
+
+                    {/* Split line */}
+                    <motion.line
+                        x1="100" y1="23" x2="100" y2="70"
+                        stroke="#fbbf24" strokeWidth="2" strokeDasharray="4 4"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: step >= 1 ? 1 : 0 }}
+                    />
+
+                    {/* Area A */}
+                    <motion.g
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: step >= 1 ? 1 : 0 }}
+                    >
+                        <text x="70" y="66" fill="#94a3b8" fontSize="12" fontWeight="bold" textAnchor="middle">A</text>
+                        {/* measuring strings */}
+                        <motion.line x1="45" y1="90" x2="95" y2="90" stroke="#38bdf8" strokeWidth="1.5" initial={{ pathLength: 0 }} animate={{ pathLength: step >= 1 ? 1 : 0 }} transition={{ duration: 0.8 }} />
+                        <motion.line x1="50" y1="30" x2="50" y2="95" stroke="#38bdf8" strokeWidth="1.5" initial={{ pathLength: 0 }} animate={{ pathLength: step >= 1 ? 1 : 0 }} transition={{ duration: 0.8 }} />
+                    </motion.g>
+
+                    {/* Area B */}
+                    <motion.g
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: step >= 1 ? 1 : 0 }}
+                    >
+                        <text x="130" y="52" fill="#94a3b8" fontSize="12" fontWeight="bold" textAnchor="middle">B</text>
+                        {/* measuring strings */}
+                        <motion.line x1="105" y1="60" x2="155" y2="60" stroke="#38bdf8" strokeWidth="1.5" initial={{ pathLength: 0 }} animate={{ pathLength: step >= 1 ? 1 : 0 }} transition={{ duration: 0.8, delay: 0.4 }} />
+                        <motion.line x1="150" y1="30" x2="150" y2="65" stroke="#38bdf8" strokeWidth="1.5" initial={{ pathLength: 0 }} animate={{ pathLength: step >= 1 ? 1 : 0 }} transition={{ duration: 0.8, delay: 0.4 }} />
+                    </motion.g>
+
+                </svg>
+
+                {/* Addition Math */}
+                <AnimatePresence>
+                    {step === 2 && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            className="absolute bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold px-3 py-1 mt-1 rounded-full text-[10px] shadow-xl bottom-1 shadow-black/50"
+                        >
+                            A + B = Total Area
                         </motion.div>
                     )}
                 </AnimatePresence>
