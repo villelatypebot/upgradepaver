@@ -104,7 +104,7 @@ export function StepMaterialQuote({
                             <hr className="border-border my-2" />
                             <p className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Installation Estimate</p>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Labor ({formatCurrency(laborQuote.laborRatePerSqft)}/sq ft)</span>
+                                <span className="text-muted-foreground">Labor</span>
                                 <span className="font-medium">{formatCurrency(laborQuote.laborCost)}</span>
                             </div>
                             <hr className="border-border" />
