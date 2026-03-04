@@ -158,18 +158,6 @@ export default function EmbedPage() {
                 {/* Mode Tabs */}
                 <div className="px-3 pb-2 flex gap-1">
                     <button
-                        onClick={() => setMode("visualizer")}
-                        className={cn(
-                            "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                            mode === "visualizer"
-                                ? "bg-primary text-primary-foreground shadow-sm"
-                                : "bg-muted text-muted-foreground hover:text-foreground"
-                        )}
-                    >
-                        <Camera className="w-3.5 h-3.5" />
-                        Quick Visualizer
-                    </button>
-                    <button
                         onClick={() => setMode("quote")}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
@@ -181,24 +169,20 @@ export default function EmbedPage() {
                         <MessageCircle className="w-3.5 h-3.5" />
                         Get a Quote
                     </button>
+                    <button
+                        onClick={() => setMode("visualizer")}
+                        className={cn(
+                            "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                            mode === "visualizer"
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "bg-muted text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        <Camera className="w-3.5 h-3.5" />
+                        Quick Visualizer
+                    </button>
                 </div>
             </div>
-
-            {/* ═══ QUOTE MODE ═══ */}
-            {mode === "quote" && (
-                <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-                    <ProgressBar
-                        steps={STEP_META}
-                        currentStepId={currentStep}
-                        completedSteps={completedSteps}
-                    />
-                    <div className="flex-1 flex justify-center overflow-hidden">
-                        <div className="w-full max-w-2xl flex flex-col min-h-0">
-                            <ChatContainer onStepChange={(step) => setCurrentStep(step)} />
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* ═══ VISUALIZER MODE ═══ */}
             {mode === "visualizer" && (
@@ -378,6 +362,22 @@ export default function EmbedPage() {
                             </div>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* ═══ QUOTE MODE ═══ */}
+            {mode === "quote" && (
+                <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                    <ProgressBar
+                        steps={STEP_META}
+                        currentStepId={currentStep}
+                        completedSteps={completedSteps}
+                    />
+                    <div className="flex-1 flex justify-center overflow-hidden">
+                        <div className="w-full max-w-2xl flex flex-col min-h-0">
+                            <ChatContainer onStepChange={(step) => setCurrentStep(step)} />
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
