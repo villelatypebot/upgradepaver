@@ -29,7 +29,7 @@ const STEP_META = [
 ];
 
 export default function EmbedPage() {
-    const [mode, setMode] = useState<EmbedMode>("visualizer");
+    const [mode, setMode] = useState<EmbedMode>("quote");
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [products, setProducts] = useState<PaverProduct[]>([]);
 
