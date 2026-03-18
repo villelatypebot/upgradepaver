@@ -128,6 +128,10 @@ export default function EmbedPage() {
 
             toast.success("Solicitação enviada com sucesso!");
             setIsSubmitted(true);
+
+            if (typeof window !== "undefined" && window.parent) {
+                window.parent.postMessage({ event: 'lead_captured' }, 'https://directpavers.com');
+            }
         } catch (error: any) {
             console.error(error);
             toast.error(error.message || "Falha ao enviar solicitação.");
