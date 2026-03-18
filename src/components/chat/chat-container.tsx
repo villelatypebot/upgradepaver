@@ -143,6 +143,11 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
     const handleLeadSubmit = async (lead: { name: string; email: string; phone?: string }) => {
         setLeadData(lead);
         trackEvent(EVENTS.LEAD_CAPTURED, { source: 'quote' });
+
+        if (typeof window !== "undefined" && window.parent) {
+            window.parent.postMessage({ event: 'lead_captured' }, 'https://directpavers.com');
+        }
+
         try {
             await fetch('/api/leads', {
                 method: 'POST',
