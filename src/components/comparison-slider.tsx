@@ -18,14 +18,14 @@ export function ComparisonSlider({ original, generated, className }: ComparisonS
                     <ReactCompareSliderImage
                         src={original}
                         alt="Original"
-                        style={{ objectFit: "contain", objectPosition: "center" }}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
                     />
                 }
                 itemTwo={
                     <ReactCompareSliderImage
                         src={generated}
                         alt="Generated"
-                        style={{ objectFit: "contain", objectPosition: "center" }}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
                     />
                 }
                 className="h-full w-full"
