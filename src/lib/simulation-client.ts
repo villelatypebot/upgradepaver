@@ -8,9 +8,33 @@ export interface SimulationRequestPayload {
     userNotes?: string;
 }
 
+export interface ImageDimensions {
+    width: number;
+    height: number;
+}
+
 interface SimulationApiResponse {
     generatedImage?: string;
     error?: string;
+}
+
+function loadImageElement(src: string) {
+    return new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new Image();
+
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("Failed to load image."));
+        image.src = src;
+    });
+}
+
+export async function loadImageDimensions(src: string): Promise<ImageDimensions> {
+    const image = await loadImageElement(src);
+
+    return {
+        width: image.naturalWidth || image.width,
+        height: image.naturalHeight || image.height,
+    };
 }
 
 function normalizeSimulationError(rawMessage: string) {
@@ -50,10 +74,22 @@ async function readSimulationResponse(response: Response) {
 }
 
 export async function requestSimulation(payload: SimulationRequestPayload) {
+    let originalDimensions: ImageDimensions | null = null;
+
+    try {
+        originalDimensions = await loadImageDimensions(payload.originalImage);
+    } catch {
+        originalDimensions = null;
+    }
+
     const response = await fetch("/api/simulate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+            ...payload,
+            originalWidth: originalDimensions?.width,
+            originalHeight: originalDimensions?.height,
+        }),
     });
 
     const data = await readSimulationResponse(response);

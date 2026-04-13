@@ -334,12 +334,12 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="h-[50vh] md:h-[70vh] w-full bg-muted/20 rounded-xl border p-1 md:p-2 shadow-inner">
+            <div className="w-full bg-muted/20 rounded-xl border p-1 md:p-2 shadow-inner">
               {selectedImage && generatedImage && (
                 <ComparisonSlider
                   original={selectedImage}
                   generated={generatedImage}
-                  className="h-full rounded-lg"
+                  className="rounded-lg"
                 />
               )}
             </div>

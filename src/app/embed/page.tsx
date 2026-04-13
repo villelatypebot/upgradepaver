@@ -328,12 +328,12 @@ export default function EmbedPage() {
                             </div>
 
                             {/* Comparison Slider - fills available space */}
-                            <div className="flex-1 min-h-[200px] w-full bg-muted/20 rounded-xl border p-1 shadow-inner">
+                            <div className="w-full bg-muted/20 rounded-xl border p-1 shadow-inner">
                                 {selectedImage && generatedImage && (
                                     <ComparisonSlider
                                         original={selectedImage}
                                         generated={generatedImage}
-                                        className="h-full rounded-lg"
+                                        className="rounded-lg"
                                     />
                                 )}
                             </div>

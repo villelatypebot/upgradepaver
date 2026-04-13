@@ -58,11 +58,11 @@ export function StepSimulation({
                 <p className="text-muted-foreground text-xs">Drag the slider to compare the aligned before & after.</p>
             </ChatMessage>
 
-            <div className="mx-2 h-[280px] sm:h-[340px] md:h-[440px] rounded-xl overflow-hidden border shadow-lg bg-muted/20 p-1">
+            <div className="mx-2 w-full rounded-xl overflow-hidden border shadow-lg bg-muted/20 p-1">
                 <ComparisonSlider
                     original={originalImage}
                     generated={generatedImage}
-                    className="h-full rounded-lg"
+                    className="rounded-lg"
                 />
             </div>
 

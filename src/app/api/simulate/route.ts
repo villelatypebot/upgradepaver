@@ -4,6 +4,38 @@ import { GoogleGenAI } from "@google/genai";
 
 export const maxDuration = 60; // Allow up to 60 seconds for processing
 
+const SUPPORTED_ASPECT_RATIOS = [
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9",
+] as const;
+
+function getClosestAspectRatio(width?: number, height?: number) {
+    if (!width || !height) {
+        return undefined;
+    }
+
+    const targetRatio = width / height;
+
+    return SUPPORTED_ASPECT_RATIOS
+        .map((aspectRatio) => {
+            const [w, h] = aspectRatio.split(":").map(Number);
+
+            return {
+                aspectRatio,
+                delta: Math.abs(targetRatio - (w / h)),
+            };
+        })
+        .sort((left, right) => left.delta - right.delta)[0]?.aspectRatio;
+}
+
 function buildSimulationPrompt({
     paverStyle,
     customPrompt,
@@ -60,7 +92,15 @@ export async function POST(req: Request) {
     let paverStyleLog = 'Unknown';
 
     try {
-        const { originalImage, paverStyle, paverTexture, customPrompt, userNotes } = await req.json();
+        const {
+            originalImage,
+            paverStyle,
+            paverTexture,
+            customPrompt,
+            userNotes,
+            originalWidth,
+            originalHeight,
+        } = await req.json();
         paverStyleLog = paverStyle || 'Unknown';
 
         if (!originalImage || !paverStyle || !paverTexture) {
@@ -88,6 +128,7 @@ export async function POST(req: Request) {
         const textureBase64 = Buffer.from(textureBuffer).toString('base64');
         const textureMimeType = textureResponse.headers.get("content-type")?.split(";")[0] || "image/jpeg";
         const prompt = buildSimulationPrompt({ paverStyle, customPrompt, userNotes });
+        const aspectRatio = getClosestAspectRatio(originalWidth, originalHeight);
 
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash-image",
@@ -110,6 +151,13 @@ export async function POST(req: Request) {
                     ],
                 },
             ],
+            config: aspectRatio
+                ? {
+                    imageConfig: {
+                        aspectRatio,
+                    },
+                }
+                : undefined,
         });
 
         const parts = response.candidates?.flatMap(candidate => candidate.content?.parts || []) || [];
