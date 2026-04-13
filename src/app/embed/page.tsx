@@ -14,18 +14,17 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { requestSimulation } from "@/lib/simulation-client";
 
 type EmbedMode = "visualizer" | "quote";
 
 const STEP_META = [
     { id: "welcome", label: "Welcome" },
     { id: "photos", label: "Photos" },
-    { id: "measurements", label: "Measurements" },
-    { id: "lead-capture", label: "Contact" },
     { id: "photo-product", label: "Product" },
-    { id: "photo-simulation", label: "Visualization" },
+    { id: "photo-simulation", label: "Preview" },
+    { id: "measurements", label: "Measurements" },
     { id: "material-quote", label: "Quote" },
-    { id: "labor-quote", label: "Summary" },
 ];
 
 export default function EmbedPage() {
@@ -40,6 +39,7 @@ export default function EmbedPage() {
 
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [visualizationNotes, setVisualizationNotes] = useState("");
     const [userName, setUserName] = useState("");
     const [userPhone, setUserPhone] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,29 +72,20 @@ export default function EmbedPage() {
 
         setIsGenerating(true);
         try {
-            const response = await fetch('/api/simulate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    originalImage: selectedImage,
-                    paverStyle: `${selectedProduct.name} - ${selectedVariant.name}`,
-                    paverTexture: selectedVariant.textureUrl,
-                    customPrompt: selectedProduct.prompt,
-                }),
+            const image = await requestSimulation({
+                originalImage: selectedImage,
+                paverStyle: `${selectedProduct.name} - ${selectedVariant.name}`,
+                paverTexture: selectedVariant.textureUrl,
+                customPrompt: selectedProduct.prompt,
+                userNotes: visualizationNotes.trim() || undefined,
             });
 
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Failed to generate simulation');
-
-            if (data.generatedImage) {
-                setGeneratedImage(data.generatedImage);
-                toast.success("Simulation complete!");
-            } else {
-                throw new Error("No image returned from API");
-            }
-        } catch (error: any) {
+            setGeneratedImage(image);
+            toast.success("Simulation complete!");
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to generate simulation.";
             console.error('Error:', error);
-            toast.error(error.message || "Failed to generate simulation.");
+            toast.error(message);
         } finally {
             setIsGenerating(false);
         }
@@ -132,9 +123,10 @@ export default function EmbedPage() {
             if (typeof window !== "undefined" && window.parent) {
                 window.parent.postMessage({ event: 'lead_captured' }, 'https://directpavers.com');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Falha ao enviar solicitação.";
             console.error(error);
-            toast.error(error.message || "Falha ao enviar solicitação.");
+            toast.error(message);
         } finally {
             setIsSubmitting(false);
         }
@@ -276,6 +268,21 @@ export default function EmbedPage() {
                                         {selectedProduct.description && (
                                             <p className="mt-2 text-xs text-muted-foreground">{selectedProduct.description}</p>
                                         )}
+                                    </div>
+                                )}
+
+                                {selectedProduct && selectedVariant && (
+                                    <div className="rounded-xl border bg-card p-3 shadow-sm space-y-2">
+                                        <div>
+                                            <h3 className="text-xs font-semibold">Optional notes for the AI</h3>
+                                            <p className="text-[10px] text-muted-foreground">Mention grass to replace or anything that should stay unchanged.</p>
+                                        </div>
+                                        <textarea
+                                            value={visualizationNotes}
+                                            onChange={(e) => setVisualizationNotes(e.target.value)}
+                                            placeholder="Example: Replace the grass by the steps too, but leave the planter on the right untouched."
+                                            className="min-h-[88px] w-full rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs outline-none transition focus:border-primary focus:bg-white resize-y"
+                                        />
                                     </div>
                                 )}
                             </div>

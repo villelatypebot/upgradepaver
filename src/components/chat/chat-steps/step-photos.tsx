@@ -41,7 +41,7 @@ export function StepPhotos({ photos, onPhotosChange, onContinue, answered }: Ste
         return (
             <>
                 <ChatMessage type="bot">
-                    Upload photos of the area you want to transform. You can add multiple photos.
+                    Upload photos of the area you want to transform first. We&apos;ll generate the visualization before we ask for measurements.
                 </ChatMessage>
                 <ChatMessage type="user">
                     <div className="flex flex-wrap gap-2">
@@ -58,7 +58,7 @@ export function StepPhotos({ photos, onPhotosChange, onContinue, answered }: Ste
     return (
         <>
             <ChatMessage type="bot">
-                Upload photos of the area you want to transform. You can add multiple photos.
+                Upload photos of the area you want to transform first. You can add multiple photos.
             </ChatMessage>
             <div className="mt-3 space-y-3">
                 {photos.length > 0 && (

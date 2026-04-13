@@ -24,7 +24,7 @@ export function StepMeasurements({ width, length, onMeasurementsChange, onContin
         return (
             <>
                 <ChatMessage type="bot">
-                    What are the measurements of the area? Enter the width and length in feet.
+                    What are the measurements of the area? Now let&apos;s size the project so we can build your quote.
                 </ChatMessage>
                 <ChatMessage type="user">
                     {width} ft x {length} ft = {totalSqft} sq ft
@@ -36,8 +36,8 @@ export function StepMeasurements({ width, length, onMeasurementsChange, onContin
     return (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }}>
             <ChatMessage type="bot">
-                <p className="text-lg font-medium tracking-tight">Need help measuring?</p>
-                <p className="text-muted-foreground mt-1 mb-3 text-sm">Enter the width and length of your project area.</p>
+                <p className="text-lg font-medium tracking-tight">Your preview is ready. Now let&apos;s build the quote.</p>
+                <p className="text-muted-foreground mt-1 mb-3 text-sm">Enter the width and length of your project area in feet.</p>
 
                 <button
                     onClick={() => setShowGuide(!showGuide)}
@@ -147,7 +147,7 @@ export function StepMeasurements({ width, length, onMeasurementsChange, onContin
                                 size="lg"
                                 className="px-8 rounded-full shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300 font-semibold text-base py-6 w-full max-w-[280px]"
                             >
-                                Continue <ArrowRight className="ml-2 h-5 w-5" />
+                                See My Quote <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>
                         </motion.div>
                     )}

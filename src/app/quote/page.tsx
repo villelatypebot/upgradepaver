@@ -8,12 +8,10 @@ import { MessageCircle } from "lucide-react";
 const STEP_META = [
     { id: "welcome", label: "Welcome" },
     { id: "photos", label: "Photos" },
-    { id: "measurements", label: "Measurements" },
-    { id: "lead-capture", label: "Contact" },
     { id: "photo-product", label: "Product" },
-    { id: "photo-simulation", label: "Visualization" },
+    { id: "photo-simulation", label: "Preview" },
+    { id: "measurements", label: "Measurements" },
     { id: "material-quote", label: "Quote" },
-    { id: "labor-quote", label: "Summary" },
 ];
 
 export default function QuotePage() {

@@ -15,13 +15,13 @@ export function StepWelcome({ onStart, answered }: StepWelcomeProps) {
             <ChatMessage type="bot">
                 <p className="font-semibold text-base mb-2">Welcome to Direct Pavers!</p>
                 <p>
-                    I&apos;ll help you visualize and quote your dream patio project. Here&apos;s what we&apos;ll do:
+                    I&apos;ll help you preview your patio first, then build the quote around it. Here&apos;s what we&apos;ll do:
                 </p>
                 <ol className="list-decimal list-inside mt-2 space-y-1 text-muted-foreground">
                     <li>Upload photos of your space</li>
-                    <li>Enter your area measurements</li>
                     <li>Choose your paver style</li>
-                    <li>See a realistic visualization</li>
+                    <li>See your AI visualization right away</li>
+                    <li>Enter your area measurements</li>
                     <li>Get your material & labor quote</li>
                 </ol>
             </ChatMessage>

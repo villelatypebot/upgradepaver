@@ -45,8 +45,8 @@ export function StepLeadCapture({
     return (
         <>
             <ChatMessage type="bot">
-                <p className="font-semibold mb-1">Before we continue, how can we reach you?</p>
-                <p className="text-muted-foreground text-xs">We&apos;ll send your quote details and keep you updated.</p>
+                <p className="font-semibold mb-1">Want us to send your quote and keep you updated?</p>
+                <p className="text-muted-foreground text-xs">Leave your contact details and our team can follow up with this design.</p>
             </ChatMessage>
 
             {!answered ? (
@@ -91,12 +91,12 @@ export function StepLeadCapture({
                         <div className="flex gap-2 pt-1">
                             <Button type="submit" className="flex-1 font-semibold">
                                 <ArrowRight className="mr-1.5 h-4 w-4" />
-                                Continue
+                                Send My Quote
                             </Button>
                             {!isRequired && (
                                 <Button type="button" variant="ghost" size="sm" onClick={onSkip} className="text-xs text-muted-foreground">
                                     <SkipForward className="mr-1 h-3 w-3" />
-                                    Skip
+                                    Not now
                                 </Button>
                             )}
                         </div>

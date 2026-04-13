@@ -2,6 +2,7 @@
 "use client";
 
 import { ReactCompareSlider, ReactCompareSliderImage } from 'react-compare-slider';
+import { cn } from "@/lib/utils";
 
 interface ComparisonSliderProps {
     original: string;
@@ -11,11 +12,23 @@ interface ComparisonSliderProps {
 
 export function ComparisonSlider({ original, generated, className }: ComparisonSliderProps) {
     return (
-        <div className={`w-full h-full rounded-xl overflow-hidden shadow-2xl ${className}`}>
+        <div className={cn("w-full h-full rounded-xl overflow-hidden shadow-2xl bg-slate-950/5", className)}>
             <ReactCompareSlider
-                itemOne={<ReactCompareSliderImage src={original} alt="Original" />}
-                itemTwo={<ReactCompareSliderImage src={generated} alt="Generated" />}
-                className="h-full w-full object-cover"
+                itemOne={
+                    <ReactCompareSliderImage
+                        src={original}
+                        alt="Original"
+                        style={{ objectFit: "contain", objectPosition: "center" }}
+                    />
+                }
+                itemTwo={
+                    <ReactCompareSliderImage
+                        src={generated}
+                        alt="Generated"
+                        style={{ objectFit: "contain", objectPosition: "center" }}
+                    />
+                }
+                className="h-full w-full"
             />
         </div>
     );

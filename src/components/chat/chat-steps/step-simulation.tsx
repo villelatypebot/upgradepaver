@@ -12,7 +12,7 @@ interface StepSimulationProps {
     isGenerating: boolean;
     product: PaverProduct;
     variant: PaverVariant;
-    onShowQuote: () => void;
+    onContinue: () => void;
     onTryAnother: () => void;
     onDownload: () => void;
     answered: boolean;
@@ -25,7 +25,7 @@ export function StepSimulation({
     isGenerating,
     product,
     variant,
-    onShowQuote,
+    onContinue,
     onTryAnother,
     onDownload,
     answered,
@@ -55,24 +55,24 @@ export function StepSimulation({
                 <p className="font-semibold text-sm mb-1">
                     Here&apos;s how your space would look with {product.name} in {variant.name}!
                 </p>
-                <p className="text-muted-foreground text-xs">Drag the slider to compare before & after.</p>
+                <p className="text-muted-foreground text-xs">Drag the slider to compare the aligned before & after.</p>
             </ChatMessage>
 
-            <div className="mx-2 h-[250px] sm:h-[300px] md:h-[400px] rounded-xl overflow-hidden border shadow-lg">
+            <div className="mx-2 h-[280px] sm:h-[340px] md:h-[440px] rounded-xl overflow-hidden border shadow-lg bg-muted/20 p-1">
                 <ComparisonSlider
                     original={originalImage}
                     generated={generatedImage}
-                    className="h-full"
+                    className="h-full rounded-lg"
                 />
             </div>
 
             {!answered && (
                 <div className="flex flex-wrap justify-center gap-2 md:gap-3 mt-3 md:mt-4 px-2">
-                    <Button onClick={onShowQuote} size="lg" className="font-semibold shadow-lg text-sm md:text-base">
+                    <Button onClick={onContinue} size="lg" className="font-semibold shadow-lg text-sm md:text-base">
                         {isLastPhoto ? (
                             <>
                                 <DollarSign className="mr-1.5 h-4 w-4" />
-                                Show Me the Price
+                                Continue to Measurements
                             </>
                         ) : (
                             "Approve & Next Photo"
@@ -90,7 +90,9 @@ export function StepSimulation({
             )}
 
             {answered && (
-                <ChatMessage type="user">Show me the price!</ChatMessage>
+                <ChatMessage type="user">
+                    {isLastPhoto ? "Continue to measurements." : "Approve & next photo."}
+                </ChatMessage>
             )}
         </>
     );

@@ -16,11 +16,11 @@ interface ProgressBarProps {
 const STEP_ORDER: Record<string, number> = {
     welcome: 0,
     photos: 1,
-    measurements: 2,
-    "lead-capture": 3,
-    "photo-product": 4,
-    "photo-simulation": 5,
-    "material-quote": 6,
+    "photo-product": 2,
+    "photo-simulation": 3,
+    measurements: 4,
+    "material-quote": 5,
+    "lead-capture": 6,
     "labor-quote": 7,
 };
 
@@ -35,7 +35,6 @@ export function ProgressBar({ steps, currentStepId, completedSteps }: ProgressBa
                     const isCompleted = completedSteps.has(step.id) || stepIndex < currentIndex;
                     const isCurrent = step.id === currentStepId ||
                         (currentStepId === "photo-simulation" && step.id === "photo-product");
-                    const isPending = !isCompleted && !isCurrent;
 
                     return (
                         <div key={step.id} className="flex-1 flex flex-col items-center gap-1">

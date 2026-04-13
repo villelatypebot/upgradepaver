@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { requestSimulation } from "@/lib/simulation-client";
 
 export default function Home() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -26,6 +27,7 @@ export default function Home() {
 
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [visualizationNotes, setVisualizationNotes] = useState("");
   const [userName, setUserName] = useState("");
   const [userPhone, setUserPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,30 +62,20 @@ export default function Home() {
 
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/simulate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          originalImage: selectedImage,
-          paverStyle: `${selectedProduct.name} - ${selectedVariant.name}`,
-          paverTexture: selectedVariant.textureUrl,
-          customPrompt: selectedProduct.prompt,
-        }),
+      const image = await requestSimulation({
+        originalImage: selectedImage,
+        paverStyle: `${selectedProduct.name} - ${selectedVariant.name}`,
+        paverTexture: selectedVariant.textureUrl,
+        customPrompt: selectedProduct.prompt,
+        userNotes: visualizationNotes.trim() || undefined,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error || 'Failed to generate simulation');
-
-      if (data.generatedImage) {
-        setGeneratedImage(data.generatedImage);
-        toast.success("Simulation complete!");
-      } else {
-        throw new Error("No image returned from API");
-      }
-    } catch (error: any) {
+      setGeneratedImage(image);
+      toast.success("Simulation complete!");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to generate simulation.";
       console.error('Error:', error);
-      toast.error(error.message || "Failed to generate simulation.");
+      toast.error(message);
     } finally {
       setIsGenerating(false);
     }
@@ -117,9 +109,10 @@ export default function Home() {
 
       toast.success("Solicitação enviada com sucesso!");
       setIsSubmitted(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Falha ao enviar solicitação.";
       console.error(error);
-      toast.error(error.message || "Falha ao enviar solicitação.");
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -173,8 +166,8 @@ export default function Home() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-3xl mx-auto">
               {[
                 { icon: Camera, label: "Upload Photos", desc: "Show us your space" },
-                { icon: Ruler, label: "Enter Measurements", desc: "Area dimensions" },
                 { icon: Wand2, label: "AI Visualization", desc: "See the result" },
+                { icon: Ruler, label: "Enter Measurements", desc: "Area dimensions" },
                 { icon: DollarSign, label: "Instant Quote", desc: "Material & labor" },
               ].map((item, i) => (
                 <div key={i} className="text-center space-y-1.5 md:space-y-2 p-3 md:p-4 rounded-xl bg-card border shadow-sm">
@@ -284,6 +277,21 @@ export default function Home() {
                   </div>
                 )}
 
+                {selectedProduct && selectedVariant && (
+                  <div className="rounded-xl border bg-card p-3 md:p-4 shadow-sm space-y-2">
+                    <div>
+                      <h3 className="text-sm font-semibold">Optional notes for the AI</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground">Mention grass to replace or any area that should stay untouched.</p>
+                    </div>
+                    <textarea
+                      value={visualizationNotes}
+                      onChange={e => setVisualizationNotes(e.target.value)}
+                      placeholder="Example: Replace the grass by the pool deck too, but keep the planting bed on the right side unchanged."
+                      className="min-h-[96px] w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-sm outline-none transition focus:border-primary focus:bg-white resize-y"
+                    />
+                  </div>
+                )}
+
                 <Separator className="my-4 md:my-6" />
 
                 <Button
@@ -315,7 +323,7 @@ export default function Home() {
                 <p className="text-sm md:text-base text-muted-foreground">Drag the slider to compare before & after.</p>
               </div>
               <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto">
-                <Button variant="outline" onClick={() => setGeneratedImage(null)} className="flex-1 md:flex-none">
+                <Button variant="outline" onClick={() => { setGeneratedImage(null); setIsSubmitted(false); }} className="flex-1 md:flex-none">
                   <RefreshCcw className="mr-2 h-4 w-4" />
                   Edit / Reset
                 </Button>

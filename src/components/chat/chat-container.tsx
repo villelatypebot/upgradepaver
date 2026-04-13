@@ -11,20 +11,22 @@ import { StepSimulation } from "./chat-steps/step-simulation";
 import { StepMaterialQuote } from "./chat-steps/step-material-quote";
 import { getProducts } from "@/lib/storage";
 import { PaverProduct, PaverVariant, ManufacturerId } from "@/config/pavers";
-import { PricingConfig, DEFAULT_PRICING, DeliveryZone } from "@/config/pricing";
+import { PricingConfig, DEFAULT_PRICING, DEFAULT_DELIVERY_ZONES, DeliveryZone } from "@/config/pricing";
 import { calculateMaterialQuote, calculateLaborQuote, MaterialQuote, LaborQuote } from "@/lib/pricing";
 import { trackEvent, getSessionId, EVENTS } from "@/lib/analytics";
 import { getShopifyVariantId, buildCartUrl, SHOPIFY_STORE_URL } from "@/config/shopify";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
+import { requestSimulation } from "@/lib/simulation-client";
 
-type Step = "welcome" | "photos" | "measurements" | "lead-capture" | "photo-product" | "photo-simulation" | "material-quote";
+type Step = "welcome" | "photos" | "photo-product" | "photo-simulation" | "measurements" | "material-quote";
 
 interface PhotoEntry {
     photo: string;
     product: PaverProduct | null;
     variant: PaverVariant | null;
+    notes: string;
     generatedImage: string | null;
     done: boolean;
 }
@@ -44,13 +46,14 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
     // Data state
     const [products, setProducts] = useState<PaverProduct[]>([]);
     const [pricingConfig, setPricingConfig] = useState<PricingConfig>(DEFAULT_PRICING);
-    const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
+    const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>(DEFAULT_DELIVERY_ZONES);
     const [photos, setPhotos] = useState<string[]>([]);
     const [width, setWidth] = useState(0);
     const [length, setLength] = useState(0);
 
     // Lead capture
     const [leadData, setLeadData] = useState<{ name: string; email: string; phone?: string } | null>(null);
+    const [leadCaptureDismissed, setLeadCaptureDismissed] = useState(false);
 
     // Per-photo state
     const [photoEntries, setPhotoEntries] = useState<PhotoEntry[]>([]);
@@ -60,11 +63,12 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
     const [activeManufacturer, setActiveManufacturer] = useState<ManufacturerId>("flagstone");
     const [selectedProduct, setSelectedProduct] = useState<PaverProduct | null>(null);
     const [selectedVariant, setSelectedVariant] = useState<PaverVariant | null>(null);
+    const [photoInstructions, setPhotoInstructions] = useState("");
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
 
     // Quote state
-    const [selectedZone, setSelectedZone] = useState<DeliveryZone | null>(null);
+    const [selectedZone, setSelectedZone] = useState<DeliveryZone | null>(DEFAULT_DELIVERY_ZONES[0] || null);
     const [materialQuote, setMaterialQuote] = useState<MaterialQuote | null>(null);
     const [laborQuote, setLaborQuote] = useState<LaborQuote | null>(null);
 
@@ -117,6 +121,7 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
             photo: p,
             product: null,
             variant: null,
+            notes: "",
             generatedImage: null,
             done: false,
         }));
@@ -124,22 +129,19 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
         setCurrentPhotoIndex(0);
         resetPhotoSelection();
         trackEvent(EVENTS.PHOTO_UPLOADED, { count: photos.length });
-        // If lead capture is enabled, go to lead capture; otherwise skip to product
-        if (pricingConfig.requireLeadCapture) {
-            advanceStep("lead-capture");
-        } else {
-            advanceStep("photo-product");
-        }
+        advanceStep("photo-product");
     };
 
-    const resetPhotoSelection = () => {
+    const resetPhotoSelection = (options?: { keepNotes?: boolean }) => {
         setActiveManufacturer("flagstone");
         setSelectedProduct(null);
         setSelectedVariant(null);
         setGeneratedImage(null);
+        if (!options?.keepNotes) {
+            setPhotoInstructions("");
+        }
     };
 
-    // Lead capture handlers
     const handleLeadSubmit = async (lead: { name: string; email: string; phone?: string }) => {
         setLeadData(lead);
         trackEvent(EVENTS.LEAD_CAPTURED, { source: 'quote' });
@@ -154,14 +156,14 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...lead, session_id: getSessionId(), source: 'quote' }),
             });
+            toast.success("We'll keep this quote on file for you.");
         } catch {
             // silent — don't block flow
         }
-        advanceStep("photo-product");
     };
 
     const handleLeadSkip = () => {
-        advanceStep("photo-product");
+        setLeadCaptureDismissed(true);
     };
 
     // Handlers
@@ -187,32 +189,23 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
         scrollToBottom();
 
         try {
-            const response = await fetch('/api/simulate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    originalImage: currentPhoto.photo,
-                    paverStyle: `${selectedProduct.name} - ${selectedVariant.name}`,
-                    paverTexture: selectedVariant.textureUrl,
-                    customPrompt: selectedProduct.prompt,
-                }),
+            const image = await requestSimulation({
+                originalImage: currentPhoto.photo,
+                paverStyle: `${selectedProduct.name} - ${selectedVariant.name}`,
+                paverTexture: selectedVariant.textureUrl,
+                customPrompt: selectedProduct.prompt,
+                userNotes: photoInstructions.trim() || undefined,
             });
 
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Failed to generate simulation');
-
-            if (data.generatedImage) {
-                setGeneratedImage(data.generatedImage);
-                trackEvent(EVENTS.SIMULATION_GENERATED, { product: selectedProduct.name });
-                toast.success("Visualization complete!");
-                scrollToBottom();
-            } else {
-                throw new Error("No image returned from API");
-            }
-        } catch (error: any) {
+            setGeneratedImage(image);
+            trackEvent(EVENTS.SIMULATION_GENERATED, { product: selectedProduct.name });
+            toast.success("Visualization complete!");
+            scrollToBottom();
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to generate simulation.";
             console.error('Error:', error);
-            trackEvent(EVENTS.SIMULATION_FAILED, { error: error.message });
-            toast.error(error.message || "Failed to generate simulation.");
+            trackEvent(EVENTS.SIMULATION_FAILED, { error: message });
+            toast.error(message);
             changeStep("photo-product");
         } finally {
             setIsGenerating(false);
@@ -225,6 +218,7 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
             ...updated[currentPhotoIndex],
             product: selectedProduct,
             variant: selectedVariant,
+            notes: photoInstructions.trim(),
             generatedImage: generatedImage,
             done: true,
         };
@@ -242,33 +236,43 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                 scrollToBottom();
             }, 800);
         } else {
-            if (selectedProduct && selectedVariant && selectedZone) {
-                const sqft = width * length;
-                const quote = calculateMaterialQuote(sqft, selectedProduct, selectedVariant, selectedZone.fee, selectedZone.label, pricingConfig);
-                setMaterialQuote(quote);
-                const labor = calculateLaborQuote(sqft, pricingConfig);
-                setLaborQuote(labor);
-                trackEvent(EVENTS.QUOTE_VIEWED, { type: 'full', total: quote.materialTotal + labor.laborCost });
-            }
-            advanceStep("material-quote");
+            advanceStep("measurements");
         }
     };
 
     const handleTryAnother = () => {
         setGeneratedImage(null);
-        resetPhotoSelection();
+        resetPhotoSelection({ keepNotes: true });
         changeStep("photo-product");
         scrollToBottom();
     };
 
-    const handleShowQuote = () => {
+    const handleContinueFromPreview = () => {
         handlePhotoApproved();
+    };
+
+    const handleMeasurementsConfirmed = () => {
+        const lastDone = [...photoEntries].reverse().find(entry => entry.done);
+
+        if (!lastDone?.product || !lastDone?.variant || !selectedZone) {
+            toast.error("Generate a preview first so we can build your quote.");
+            return;
+        }
+
+        const sqft = width * length;
+        const quote = calculateMaterialQuote(sqft, lastDone.product, lastDone.variant, selectedZone.fee, selectedZone.label, pricingConfig);
+        const labor = calculateLaborQuote(sqft, pricingConfig);
+
+        setMaterialQuote(quote);
+        setLaborQuote(labor);
+        trackEvent(EVENTS.QUOTE_VIEWED, { type: 'full', total: quote.materialTotal + labor.laborCost });
+        advanceStep("material-quote");
     };
 
     const handleDeliveryZoneChange = (zone: DeliveryZone) => {
         setSelectedZone(zone);
         const lastDone = [...photoEntries].reverse().find(e => e.done);
-        if (lastDone?.product && lastDone?.variant) {
+        if (lastDone?.product && lastDone?.variant && width > 0 && length > 0) {
             const sqft = width * length;
             const quote = calculateMaterialQuote(sqft, lastDone.product, lastDone.variant, zone.fee, zone.label, pricingConfig);
             setMaterialQuote(quote);
@@ -389,10 +393,11 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
         setCurrentPhotoIndex(0);
         resetPhotoSelection();
         setIsGenerating(false);
-        setSelectedZone(deliveryZones[0] || null);
+        setSelectedZone(deliveryZones[0] || DEFAULT_DELIVERY_ZONES[0] || null);
         setMaterialQuote(null);
         setLaborQuote(null);
         setLeadData(null);
+        setLeadCaptureDismissed(false);
         setIsTyping(false);
     };
 
@@ -421,30 +426,8 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                     <StepPhotos
                         photos={photos}
                         onPhotosChange={setPhotos}
-                        onContinue={() => advanceStep("measurements")}
-                        answered={isStepDone("photos")}
-                    />
-                )}
-
-                {/* Measurements */}
-                {(isStepActive("measurements") || isStepDone("measurements")) && (
-                    <StepMeasurements
-                        width={width}
-                        length={length}
-                        onMeasurementsChange={(w, l) => { setWidth(w); setLength(l); }}
                         onContinue={handlePhotosConfirmed}
-                        answered={isStepDone("measurements")}
-                    />
-                )}
-
-                {/* Lead Capture */}
-                {(isStepActive("lead-capture") || isStepDone("lead-capture")) && (
-                    <StepLeadCapture
-                        onSubmit={handleLeadSubmit}
-                        onSkip={handleLeadSkip}
-                        answered={isStepDone("lead-capture")}
-                        answeredData={leadData}
-                        isRequired={pricingConfig.requireLeadCapture}
+                        answered={isStepDone("photos")}
                     />
                 )}
 
@@ -495,6 +478,7 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                             activeManufacturer={activeManufacturer}
                             selectedProduct={selectedProduct}
                             selectedVariant={selectedVariant}
+                            notes={photoInstructions}
                             onManufacturerChange={(id) => {
                                 setActiveManufacturer(id);
                                 setSelectedProduct(null);
@@ -502,6 +486,7 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                             }}
                             onProductSelect={handleProductSelect}
                             onVariantSelect={setSelectedVariant}
+                            onNotesChange={setPhotoInstructions}
                             onGenerate={handleGenerate}
                             answered={false}
                         />
@@ -516,11 +501,22 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                         isGenerating={isGenerating}
                         product={selectedProduct}
                         variant={selectedVariant}
-                        onShowQuote={handleShowQuote}
+                        onContinue={handleContinueFromPreview}
                         onTryAnother={handleTryAnother}
                         onDownload={handleDownload}
                         answered={false}
                         isLastPhoto={currentPhotoIndex === photoEntries.length - 1}
+                    />
+                )}
+
+                {/* Measurements */}
+                {(isStepActive("measurements") || isStepDone("measurements")) && (
+                    <StepMeasurements
+                        width={width}
+                        length={length}
+                        onMeasurementsChange={(w, l) => { setWidth(w); setLength(l); }}
+                        onContinue={handleMeasurementsConfirmed}
+                        answered={isStepDone("measurements")}
                     />
                 )}
 
@@ -538,6 +534,16 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                         ownerPhone={pricingConfig.ownerPhone}
                         ownerSms={pricingConfig.ownerSms}
                         answered={isStepDone("material-quote")}
+                    />
+                )}
+
+                {(isStepActive("material-quote") || isStepDone("material-quote")) && !leadData && (pricingConfig.requireLeadCapture || !leadCaptureDismissed) && (
+                    <StepLeadCapture
+                        onSubmit={handleLeadSubmit}
+                        onSkip={handleLeadSkip}
+                        answered={Boolean(leadData)}
+                        answeredData={leadData}
+                        isRequired={pricingConfig.requireLeadCapture}
                     />
                 )}
 

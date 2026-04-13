@@ -11,9 +11,11 @@ interface StepProductSelectProps {
     activeManufacturer: ManufacturerId;
     selectedProduct: PaverProduct | null;
     selectedVariant: PaverVariant | null;
+    notes: string;
     onManufacturerChange: (id: ManufacturerId) => void;
     onProductSelect: (product: PaverProduct) => void;
     onVariantSelect: (variant: PaverVariant) => void;
+    onNotesChange: (notes: string) => void;
     onGenerate: () => void;
     answered: boolean;
 }
@@ -23,9 +25,11 @@ export function StepProductSelect({
     activeManufacturer,
     selectedProduct,
     selectedVariant,
+    notes,
     onManufacturerChange,
     onProductSelect,
     onVariantSelect,
+    onNotesChange,
     onGenerate,
     answered,
 }: StepProductSelectProps) {
@@ -51,7 +55,7 @@ export function StepProductSelect({
     return (
         <>
             <ChatMessage type="bot">
-                Choose your paver style and color. Then we&apos;ll generate a visualization of your space.
+                Choose your paver style and color. You can also leave notes for the AI before we generate your preview.
             </ChatMessage>
             <div className="mt-3 space-y-4 px-2">
                 {/* Manufacturer Tabs */}
@@ -140,6 +144,21 @@ export function StepProductSelect({
                                 </button>
                             ))}
                         </div>
+                    </div>
+                )}
+
+                {selectedProduct && selectedVariant && (
+                    <div className="bg-white border rounded-xl p-3 shadow-sm">
+                        <h3 className="text-xs font-semibold mb-1">Optional notes for the AI</h3>
+                        <p className="text-[11px] text-muted-foreground mb-2">
+                            Tell us if there&apos;s grass to replace, an area to keep untouched, or any special instruction.
+                        </p>
+                        <textarea
+                            value={notes}
+                            onChange={(e) => onNotesChange(e.target.value)}
+                            placeholder="Example: Replace the grass in front of the steps too, but leave the plant bed on the right side unchanged."
+                            className="min-h-[96px] w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary focus:bg-white resize-y"
+                        />
                     </div>
                 )}
 
