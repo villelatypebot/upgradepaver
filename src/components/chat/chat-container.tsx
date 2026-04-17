@@ -19,6 +19,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 import { requestSimulation } from "@/lib/simulation-client";
+import {
+    MeasurementArea,
+    createMeasurementArea,
+    formatMeasurementAreaLabel,
+    getCompletedMeasurementAreas,
+    getTotalMeasurementSqft,
+} from "@/lib/measurements";
 
 type Step = "welcome" | "photos" | "photo-product" | "photo-simulation" | "measurements" | "material-quote";
 
@@ -28,6 +35,8 @@ interface PhotoEntry {
     variant: PaverVariant | null;
     notes: string;
     generatedImage: string | null;
+    simulationFailed: boolean;
+    simulationError: string | null;
     done: boolean;
 }
 
@@ -48,8 +57,7 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
     const [pricingConfig, setPricingConfig] = useState<PricingConfig>(DEFAULT_PRICING);
     const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>(DEFAULT_DELIVERY_ZONES);
     const [photos, setPhotos] = useState<string[]>([]);
-    const [width, setWidth] = useState(0);
-    const [length, setLength] = useState(0);
+    const [measurementAreas, setMeasurementAreas] = useState<MeasurementArea[]>([createMeasurementArea(0)]);
 
     // Lead capture
     const [leadData, setLeadData] = useState<{ name: string; email: string; phone?: string } | null>(null);
@@ -123,6 +131,8 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
             variant: null,
             notes: "",
             generatedImage: null,
+            simulationFailed: false,
+            simulationError: null,
             done: false,
         }));
         setPhotoEntries(entries);
@@ -205,8 +215,30 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
             const message = error instanceof Error ? error.message : "Failed to generate simulation.";
             console.error('Error:', error);
             trackEvent(EVENTS.SIMULATION_FAILED, { error: message });
-            toast.error(message);
-            changeStep("photo-product");
+            setGeneratedImage(null);
+            setPhotoEntries(prev => {
+                const updated = [...prev];
+                const currentEntry = updated[currentPhotoIndex];
+
+                if (!currentEntry) {
+                    return prev;
+                }
+
+                updated[currentPhotoIndex] = {
+                    ...currentEntry,
+                    product: selectedProduct,
+                    variant: selectedVariant,
+                    notes: photoInstructions.trim(),
+                    generatedImage: null,
+                    simulationFailed: true,
+                    simulationError: message,
+                    done: true,
+                };
+
+                return updated;
+            });
+            toast.error(`${message} We'll keep going so you can still get your quote.`);
+            advanceStep("measurements");
         } finally {
             setIsGenerating(false);
         }
@@ -220,6 +252,8 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
             variant: selectedVariant,
             notes: photoInstructions.trim(),
             generatedImage: generatedImage,
+            simulationFailed: false,
+            simulationError: null,
             done: true,
         };
         setPhotoEntries(updated);
@@ -253,15 +287,20 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
 
     const handleMeasurementsConfirmed = () => {
         const lastDone = [...photoEntries].reverse().find(entry => entry.done);
+        const totalSqft = getTotalMeasurementSqft(measurementAreas);
 
         if (!lastDone?.product || !lastDone?.variant || !selectedZone) {
-            toast.error("Generate a preview first so we can build your quote.");
+            toast.error("Choose a paver style first so we can build your quote.");
             return;
         }
 
-        const sqft = width * length;
-        const quote = calculateMaterialQuote(sqft, lastDone.product, lastDone.variant, selectedZone.fee, selectedZone.label, pricingConfig);
-        const labor = calculateLaborQuote(sqft, pricingConfig);
+        if (totalSqft <= 0) {
+            toast.error("Please enter at least one area measurement.");
+            return;
+        }
+
+        const quote = calculateMaterialQuote(totalSqft, lastDone.product, lastDone.variant, selectedZone.fee, selectedZone.label, pricingConfig);
+        const labor = calculateLaborQuote(totalSqft, pricingConfig);
 
         setMaterialQuote(quote);
         setLaborQuote(labor);
@@ -272,11 +311,12 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
     const handleDeliveryZoneChange = (zone: DeliveryZone) => {
         setSelectedZone(zone);
         const lastDone = [...photoEntries].reverse().find(e => e.done);
-        if (lastDone?.product && lastDone?.variant && width > 0 && length > 0) {
-            const sqft = width * length;
-            const quote = calculateMaterialQuote(sqft, lastDone.product, lastDone.variant, zone.fee, zone.label, pricingConfig);
+        const totalSqft = getTotalMeasurementSqft(measurementAreas);
+
+        if (lastDone?.product && lastDone?.variant && totalSqft > 0) {
+            const quote = calculateMaterialQuote(totalSqft, lastDone.product, lastDone.variant, zone.fee, zone.label, pricingConfig);
             setMaterialQuote(quote);
-            const labor = calculateLaborQuote(sqft, pricingConfig);
+            const labor = calculateLaborQuote(totalSqft, pricingConfig);
             setLaborQuote(labor);
         }
     };
@@ -296,6 +336,10 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
         const type = withLabor ? 'buy_with_labor' : 'buy_material';
         trackEvent(EVENTS.CTA_CLICKED, { type });
         const lastDone = [...photoEntries].reverse().find(e => e.done);
+        const completedAreas = getCompletedMeasurementAreas(measurementAreas);
+        const areaBreakdown = completedAreas
+            .map((area, index) => `${formatMeasurementAreaLabel(area, index)} ${area.width}x${area.length} ft`)
+            .join(', ');
 
         // Fire webhook asynchronously
         if (leadData && lastDone?.product && lastDone?.variant && materialQuote) {
@@ -308,6 +352,7 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                 variantName: lastDone.variant.name,
                 quoteType: type,
                 areaSqft: materialQuote.areaSqft,
+                areaBreakdown,
                 materialTotal: materialQuote.materialTotal,
                 palletsNeeded: materialQuote.palletsNeeded,
                 laborCost: laborQuote ? laborQuote.laborCost : 0,
@@ -346,6 +391,7 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
             note = [
                 'INSTALLATION REQUESTED',
                 `Area: ${laborQuote.areaSqft} sq ft`,
+                areaBreakdown ? `Areas: ${areaBreakdown}` : '',
                 `Estimated labor: $${laborQuote.laborCost.toFixed(2)}`,
                 `Labor rate: $${laborQuote.laborRatePerSqft}/sq ft`,
                 leadInfo,
@@ -371,12 +417,18 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
         }
         const doneEntries = photoEntries.filter(e => e.done);
         const productList = doneEntries.map(e => `${e.product?.name} (${e.variant?.name})`).join(', ');
+        const completedAreas = getCompletedMeasurementAreas(measurementAreas);
+        const totalSqft = getTotalMeasurementSqft(measurementAreas);
+        const areaBreakdown = completedAreas
+            .map((area, index) => `${formatMeasurementAreaLabel(area, index)} ${area.width}x${area.length} ft`)
+            .join(', ');
         const leadInfo = leadData ? `${leadData.name}, ${leadData.email}` : '';
         const parts = [
             'Hi! I\'m interested in a paver project.',
             leadInfo ? `${leadInfo}.` : '',
             productList ? `Products: ${productList}.` : '',
-            width && length ? `Area: ${width * length} sq ft.` : '',
+            totalSqft > 0 ? `Area: ${totalSqft} sq ft.` : '',
+            areaBreakdown ? `Breakdown: ${areaBreakdown}.` : '',
             'Can we discuss the details?',
         ].filter(Boolean).join(' ');
         const message = encodeURIComponent(parts);
@@ -387,8 +439,7 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
         changeStep("welcome");
         setCompletedSteps(new Set());
         setPhotos([]);
-        setWidth(0);
-        setLength(0);
+        setMeasurementAreas([createMeasurementArea(0)]);
         setPhotoEntries([]);
         setCurrentPhotoIndex(0);
         resetPhotoSelection();
@@ -458,6 +509,13 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                                 <ChatMessage type="user">Approved!</ChatMessage>
                             </>
                         )}
+                        {entry.simulationFailed && (
+                            <ChatMessage type="bot">
+                                <p className="text-sm">
+                                    {entry.simulationError || `We couldn't generate the preview for photo ${i + 1}.`} We kept your selection and continued with the quote flow.
+                                </p>
+                            </ChatMessage>
+                        )}
                     </div>
                 ))}
 
@@ -512,11 +570,11 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                 {/* Measurements */}
                 {(isStepActive("measurements") || isStepDone("measurements")) && (
                     <StepMeasurements
-                        width={width}
-                        length={length}
-                        onMeasurementsChange={(w, l) => { setWidth(w); setLength(l); }}
+                        areas={measurementAreas}
+                        onAreasChange={setMeasurementAreas}
                         onContinue={handleMeasurementsConfirmed}
                         answered={isStepDone("measurements")}
+                        previewUnavailable={photoEntries.some((entry) => entry.simulationFailed) && !photoEntries.some((entry) => entry.generatedImage)}
                     />
                 )}
 
@@ -525,6 +583,7 @@ export function ChatContainer({ onStepChange }: ChatContainerProps) {
                     <StepMaterialQuote
                         quote={materialQuote}
                         laborQuote={laborQuote}
+                        measurementAreas={measurementAreas}
                         deliveryZones={deliveryZones}
                         selectedZone={selectedZone}
                         onDeliveryZoneChange={handleDeliveryZoneChange}

@@ -21,7 +21,7 @@ export function StepWelcome({ onStart, answered }: StepWelcomeProps) {
                     <li>Upload photos of your space</li>
                     <li>Choose your paver style</li>
                     <li>See your AI visualization right away</li>
-                    <li>Enter your area measurements</li>
+                    <li>Enter up to four project areas</li>
                     <li>Get your material & labor quote</li>
                 </ol>
             </ChatMessage>

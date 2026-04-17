@@ -3,9 +3,11 @@
 
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Image as ImageIcon, X } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import { MAX_UPLOAD_FILE_MB, prepareImageForAnalysis } from "@/lib/image-upload";
 
 interface ImageUploadProps {
     selectedImage: string | null;
@@ -15,14 +17,19 @@ interface ImageUploadProps {
 export function ImageUpload({ selectedImage, onImageSelect }: ImageUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [isPreparing, setIsPreparing] = useState(false);
 
-    const handleFile = (file: File) => {
-        if (file && file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                onImageSelect(e.target?.result as string);
-            };
-            reader.readAsDataURL(file);
+    const handleFile = async (file: File) => {
+        setIsPreparing(true);
+
+        try {
+            const prepared = await prepareImageForAnalysis(file);
+            onImageSelect(prepared.dataUrl);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to prepare the selected image.";
+            toast.error(message);
+        } finally {
+            setIsPreparing(false);
         }
     };
 
@@ -40,7 +47,7 @@ export function ImageUpload({ selectedImage, onImageSelect }: ImageUploadProps) 
         e.preventDefault();
         setIsDragging(false);
         if (e.dataTransfer.files?.[0]) {
-            handleFile(e.dataTransfer.files[0]);
+            void handleFile(e.dataTransfer.files[0]);
         }
     };
 
@@ -56,13 +63,15 @@ export function ImageUpload({ selectedImage, onImageSelect }: ImageUploadProps) 
                     <Button
                         variant="secondary"
                         size="sm"
+                        disabled={isPreparing}
                         onClick={() => fileInputRef.current?.click()}
                     >
-                        Change Image
+                        {isPreparing ? "Preparing..." : "Change Image"}
                     </Button>
                     <Button
                         variant="destructive"
                         size="icon"
+                        disabled={isPreparing}
                         onClick={() => onImageSelect(null)}
                     >
                         <X className="w-4 h-4" />
@@ -73,7 +82,12 @@ export function ImageUpload({ selectedImage, onImageSelect }: ImageUploadProps) 
                     className="hidden"
                     ref={fileInputRef}
                     accept="image/*"
-                    onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+                    onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                            void handleFile(e.target.files[0]);
+                        }
+                        e.target.value = "";
+                    }}
                 />
             </div>
         );
@@ -95,16 +109,23 @@ export function ImageUpload({ selectedImage, onImageSelect }: ImageUploadProps) 
                 className="hidden"
                 ref={fileInputRef}
                 accept="image/*"
-                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+                onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                        void handleFile(e.target.files[0]);
+                    }
+                    e.target.value = "";
+                }}
             />
             <div className="rounded-full bg-background p-4 mb-4 shadow-sm border">
-                <Upload className="w-8 h-8 text-primary/80" />
+                {isPreparing ? <Loader2 className="w-8 h-8 text-primary animate-spin" /> : <Upload className="w-8 h-8 text-primary/80" />}
             </div>
             <h3 className="font-semibold text-lg text-foreground/80 mb-1">
-                Upload your photo
+                {isPreparing ? "Preparing your photo" : "Upload your photo"}
             </h3>
             <p className="text-sm text-muted-foreground text-center max-w-xs">
-                Drag & drop or click to browse. We support JPG and PNG.
+                {isPreparing
+                    ? "Optimizing image quality for the AI..."
+                    : `Drag & drop or click to browse. We support photos up to ${MAX_UPLOAD_FILE_MB} MB.`}
             </p>
         </Card>
     );

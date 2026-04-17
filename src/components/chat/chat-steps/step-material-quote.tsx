@@ -7,10 +7,17 @@ import { formatCurrency } from "@/lib/pricing";
 import { ShoppingCart, MapPin, Phone, MessageCircle } from "lucide-react";
 import { DeliveryZone } from "@/config/pricing";
 import { cn } from "@/lib/utils";
+import {
+    MeasurementArea,
+    formatMeasurementAreaLabel,
+    getAreaSqft,
+    getCompletedMeasurementAreas,
+} from "@/lib/measurements";
 
 interface StepMaterialQuoteProps {
     quote: MaterialQuote | null;
     laborQuote: LaborQuote | null;
+    measurementAreas: MeasurementArea[];
     deliveryZones: DeliveryZone[];
     selectedZone: DeliveryZone | null;
     onDeliveryZoneChange: (zone: DeliveryZone) => void;
@@ -25,6 +32,7 @@ interface StepMaterialQuoteProps {
 export function StepMaterialQuote({
     quote,
     laborQuote,
+    measurementAreas,
     deliveryZones,
     selectedZone,
     onDeliveryZoneChange,
@@ -38,6 +46,7 @@ export function StepMaterialQuote({
     if (!quote) return null;
 
     const grandTotal = laborQuote ? quote.materialTotal + laborQuote.laborCost : quote.materialTotal;
+    const completedAreas = getCompletedMeasurementAreas(measurementAreas);
 
     return (
         <>
@@ -73,8 +82,22 @@ export function StepMaterialQuote({
                         <span className="text-muted-foreground">Product</span>
                         <span className="font-medium text-right">{quote.product.name} - {quote.variant.name}</span>
                     </div>
+                    {completedAreas.length > 0 && (
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between gap-2">
+                                <span className="text-muted-foreground">Measured areas</span>
+                                <span className="text-right">{completedAreas.length} area{completedAreas.length !== 1 ? "s" : ""}</span>
+                            </div>
+                            {completedAreas.map((area, index) => (
+                                <div key={area.id} className="flex justify-between gap-2 text-[11px] md:text-xs text-muted-foreground">
+                                    <span>{formatMeasurementAreaLabel(area, index)}</span>
+                                    <span className="text-right">{area.width} ft x {area.length} ft = {getAreaSqft(area)} sq ft</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     <div className="flex justify-between gap-2">
-                        <span className="text-muted-foreground">Area</span>
+                        <span className="text-muted-foreground">Total area</span>
                         <span className="text-right">{quote.areaSqft} sq ft (+{quote.wastePercentage}% = {quote.areaWithWaste} sq ft)</span>
                     </div>
                     <div className="flex justify-between">
