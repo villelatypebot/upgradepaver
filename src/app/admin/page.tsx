@@ -235,7 +235,7 @@ export default function AdminPage() {
             const d = await r.json(); if (Array.isArray(d)) { setDeliveryZones(d); toast.success("Deleted"); }
         } catch { toast.error("Error"); }
     };
-    const handleUpdateLeadStatus = async (id: string, status: string) => {
+    const handleUpdateLeadStatus = async (id: string, status: AdminLead["status"]) => {
         try {
             await fetch('/api/leads', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
             setLeads(leads.map(l => l.id === id ? { ...l, status } : l)); toast.success("Updated");
@@ -572,7 +572,7 @@ export default function AdminPage() {
                                             <div className="flex items-center gap-3">
                                                 <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"><Users className="w-4 h-4 text-primary" /></div>
                                                 <div className="flex-1 min-w-0"><p className="font-medium text-sm">{l.name}</p><p className="text-xs text-muted-foreground truncate">{l.email}{l.phone && ` · ${l.phone}`}</p></div>
-                                                <select value={l.status} onChange={e => handleUpdateLeadStatus(l.id, e.target.value)}
+                                                <select value={l.status} onChange={e => handleUpdateLeadStatus(l.id, e.target.value as AdminLead["status"])}
                                                     className={`text-[11px] px-2 py-1 rounded-full border-0 font-medium cursor-pointer ${l.status === 'new' ? 'bg-blue-100 text-blue-700' : l.status === 'contacted' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
                                                     <option value="new">New</option><option value="contacted">Contacted</option><option value="converted">Converted</option>
                                                 </select>
