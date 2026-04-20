@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getLeads, saveLead, updateLeadStatus } from '@/lib/db-storage';
+import { deleteLead, getLeads, saveLead, updateLeadStatus } from '@/lib/db-storage';
+
+function getErrorMessage(error: unknown) {
+    return error instanceof Error ? error.message : 'Internal server error';
+}
 
 export async function GET(req: Request) {
     try {
@@ -9,8 +13,8 @@ export async function GET(req: Request) {
         const limit = parseInt(searchParams.get('limit') || '100');
         const leads = await getLeads({ source, status, limit });
         return NextResponse.json(leads);
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
     }
 }
 
@@ -22,8 +26,8 @@ export async function POST(req: Request) {
         }
         const lead = await saveLead(body);
         return NextResponse.json(lead);
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
     }
 }
 
@@ -35,7 +39,20 @@ export async function PUT(req: Request) {
         }
         await updateLeadStatus(body.id, body.status);
         return NextResponse.json({ ok: true });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
+    }
+}
+
+export async function DELETE(req: Request) {
+    try {
+        const body = await req.json();
+        if (!body.id) {
+            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+        }
+        await deleteLead(body.id);
+        return NextResponse.json({ ok: true });
+    } catch (error: unknown) {
+        return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
     }
 }

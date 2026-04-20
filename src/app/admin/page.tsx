@@ -23,6 +23,15 @@ const PROMPT_TEMPLATES = {
 
 type PromptType = "floor" | "wall" | "fireplace" | "pool" | "custom";
 type AdminTab = "dashboard" | "products" | "pricing" | "leads" | "logs" | "settings";
+type AdminLead = {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string | null;
+    source: string;
+    status: "new" | "contacted" | "converted";
+    created_at: string;
+};
 
 const NAV_ITEMS: { id: AdminTab; label: string; icon: any }[] = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
@@ -99,7 +108,7 @@ export default function AdminPage() {
     const [newZoneFee, setNewZoneFee] = useState(0);
 
     // Leads
-    const [leads, setLeads] = useState<any[]>([]);
+    const [leads, setLeads] = useState<AdminLead[]>([]);
     const [leadsLoaded, setLeadsLoaded] = useState(false);
 
     // Dashboard
@@ -231,6 +240,16 @@ export default function AdminPage() {
             await fetch('/api/leads', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
             setLeads(leads.map(l => l.id === id ? { ...l, status } : l)); toast.success("Updated");
         } catch { toast.error("Error"); }
+    };
+    const handleDeleteLead = async (id: string) => {
+        if (!confirm("Delete this lead?")) return;
+        try {
+            const r = await fetch('/api/leads', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+            if (!r.ok) throw new Error("Failed to delete lead");
+            setLeads(leads.filter(l => l.id !== id));
+            setDashboardLoaded(false);
+            toast.success("Lead deleted");
+        } catch { toast.error("Error deleting lead"); }
     };
 
     // ─── Login Screen ───
@@ -548,7 +567,7 @@ export default function AdminPage() {
                             <Card><CardContent className="pt-6">
                                 <div className="border rounded-md divide-y max-h-[600px] overflow-y-auto">
                                     {!leads.length && <p className="p-6 text-center text-muted-foreground">No leads yet.</p>}
-                                    {leads.map((l: any) => (
+                                    {leads.map((l) => (
                                         <div key={l.id} className="p-3 md:p-4 hover:bg-muted/30 transition">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"><Users className="w-4 h-4 text-primary" /></div>
@@ -557,6 +576,15 @@ export default function AdminPage() {
                                                     className={`text-[11px] px-2 py-1 rounded-full border-0 font-medium cursor-pointer ${l.status === 'new' ? 'bg-blue-100 text-blue-700' : l.status === 'contacted' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
                                                     <option value="new">New</option><option value="contacted">Contacted</option><option value="converted">Converted</option>
                                                 </select>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                                    onClick={() => handleDeleteLead(l.id)}
+                                                    aria-label={`Delete lead ${l.name}`}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
                                             </div>
                                             <div className="flex items-center gap-2 mt-1.5 ml-12">
                                                 <span className="text-[10px] bg-muted px-2 py-0.5 rounded">{l.source}</span>

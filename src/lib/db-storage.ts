@@ -253,12 +253,26 @@ export async function updateLeadStatus(id: string, status: string): Promise<void
     }
 }
 
+export async function deleteLead(id: string): Promise<void> {
+    try {
+        const { error } = await supabaseAdmin
+            .from('leads')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    } catch (error) {
+        console.error('Error deleting lead from Supabase:', error);
+        throw error;
+    }
+}
+
 // ─── Analytics ──────────────────────────────────────────────
 
 export async function insertAnalyticsEvent(event: {
     session_id: string;
     event_type: string;
-    event_data?: any;
+    event_data?: Record<string, unknown>;
     step?: string | null;
 }): Promise<void> {
     try {
