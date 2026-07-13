@@ -99,9 +99,7 @@ function shouldRetryWithAnotherModel(error: unknown) {
     return /RESOURCE_EXHAUSTED|rate limit|quota|429|temporarily busy|overloaded|unavailable|503|Requests En/i.test(message);
 }
 
-function extractGeneratedImage(outputs: Array<{ type: string; data?: string; mime_type?: string }> | undefined) {
-    const imageOutput = outputs?.find((output) => output.type === "image" && output.data);
-
+function extractGeneratedImage(imageOutput: { data?: string; mime_type?: string } | undefined) {
     if (!imageOutput?.data) {
         return null;
     }
@@ -183,9 +181,7 @@ export async function POST(req: Request) {
                     },
                 });
 
-                generatedImage = extractGeneratedImage(
-                    interaction.outputs as Array<{ type: string; data?: string; mime_type?: string }> | undefined,
-                );
+                generatedImage = extractGeneratedImage(interaction.output_image);
 
                 if (generatedImage) {
                     break;
