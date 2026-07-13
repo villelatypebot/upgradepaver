@@ -17,6 +17,12 @@ const SUPPORTED_ASPECT_RATIOS = [
     "21:9",
 ] as const;
 
+const IMAGE_MODELS = [
+    "gemini-3.1-flash-image",
+    "gemini-3.1-flash-lite-image",
+    "gemini-2.5-flash-image",
+] as const;
+
 function getClosestAspectRatio(width?: number, height?: number) {
     if (!width || !height) {
         return undefined;
@@ -87,9 +93,26 @@ function toFriendlySimulationError(error: unknown) {
     return message;
 }
 
+function shouldRetryWithAnotherModel(error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+
+    return /RESOURCE_EXHAUSTED|rate limit|quota|429|temporarily busy|overloaded|unavailable|503|Requests En/i.test(message);
+}
+
+function extractGeneratedImage(outputs: Array<{ type: string; data?: string; mime_type?: string }> | undefined) {
+    const imageOutput = outputs?.find((output) => output.type === "image" && output.data);
+
+    if (!imageOutput?.data) {
+        return null;
+    }
+
+    return `data:${imageOutput.mime_type || "image/jpeg"};base64,${imageOutput.data}`;
+}
+
 export async function POST(req: Request) {
     const startTime = Date.now();
     let paverStyleLog = 'Unknown';
+    let modelUsed: string = IMAGE_MODELS[0];
 
     try {
         const {
@@ -129,61 +152,59 @@ export async function POST(req: Request) {
         const textureMimeType = textureResponse.headers.get("content-type")?.split(";")[0] || "image/jpeg";
         const prompt = buildSimulationPrompt({ paverStyle, customPrompt, userNotes });
         const aspectRatio = getClosestAspectRatio(originalWidth, originalHeight);
+        let generatedImage: string | null = null;
+        let lastError: unknown = null;
 
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash-image",
-            contents: [
-                {
-                    parts: [
-                        { text: prompt },
+        for (const model of IMAGE_MODELS) {
+            modelUsed = model;
+
+            try {
+                const interaction = await ai.interactions.create({
+                    model,
+                    input: [
+                        { type: "text", text: prompt },
                         {
-                            inlineData: {
-                                mimeType: originalMimeType,
-                                data: base64Image,
-                            },
+                            type: "image",
+                            mime_type: originalMimeType,
+                            data: base64Image,
                         },
                         {
-                            inlineData: {
-                                mimeType: textureMimeType,
-                                data: textureBase64,
-                            },
+                            type: "image",
+                            mime_type: textureMimeType,
+                            data: textureBase64,
                         },
                     ],
-                },
-            ],
-            config: aspectRatio
-                ? {
-                    imageConfig: {
-                        aspectRatio,
+                    response_mime_type: "image/jpeg",
+                    response_format: {
+                        type: "image",
+                        mime_type: "image/jpeg",
+                        image_size: "1K",
+                        ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
                     },
+                });
+
+                generatedImage = extractGeneratedImage(
+                    interaction.outputs as Array<{ type: string; data?: string; mime_type?: string }> | undefined,
+                );
+
+                if (generatedImage) {
+                    break;
                 }
-                : undefined,
-        });
 
-        const parts = response.candidates?.flatMap(candidate => candidate.content?.parts || []) || [];
-
-        // Find the part that contains the image
-        const imagePart = parts.find(p => p.inlineData);
-        let generatedImage: string | undefined;
-
-        if (imagePart?.inlineData) {
-            const generatedMime = imagePart.inlineData.mimeType;
-            const generatedImageData = imagePart.inlineData.data;
-            generatedImage = `data:${generatedMime};base64,${generatedImageData}`;
-        } else {
-            // Fallback: Check if the text contains a markdown image or base64 data
-            const textPart = parts.find(p => p.text);
-            const text = textPart?.text || '';
-
-            // Regex for explicit markdown image with data URL or just a raw data URL
-            const base64Match = text.match(/data:image\/(?:png|jpeg|jpg|webp);base64,([a-zA-Z0-9+/=]+)/);
-
-            if (base64Match) {
-                console.log("Found base64 image in text response");
-                generatedImage = base64Match[0]; // The whole match is the data URL
-            } else {
                 throw new Error("The visualization service returned text instead of an image.");
+            } catch (error: unknown) {
+                lastError = error;
+
+                if (!shouldRetryWithAnotherModel(error) || model === IMAGE_MODELS[IMAGE_MODELS.length - 1]) {
+                    throw error;
+                }
             }
+        }
+
+        if (!generatedImage) {
+            throw lastError instanceof Error
+                ? lastError
+                : new Error("The visualization service did not return an image.");
         }
 
         await addLog({
@@ -191,6 +212,7 @@ export async function POST(req: Request) {
             status: 'success',
             details: {
                 paver: paverStyleLog,
+                model: modelUsed,
                 durationMs: Date.now() - startTime
             }
         });
@@ -207,6 +229,7 @@ export async function POST(req: Request) {
             status: 'error',
             details: {
                 paver: paverStyleLog,
+                model: modelUsed,
                 error: friendlyError,
                 durationMs: Date.now() - startTime
             }

@@ -5,6 +5,23 @@ import { supabaseAdmin } from './supabase';
 
 // ─── Products ───────────────────────────────────────────────
 
+function mergeSeededProducts(storedProducts: PaverProduct[]): PaverProduct[] {
+    if (storedProducts.length === 0) {
+        return INITIAL_PRODUCTS;
+    }
+
+    const storedById = new Map(storedProducts.map((product) => [product.id, product]));
+    const mergedProducts = INITIAL_PRODUCTS.map((seededProduct) => storedById.get(seededProduct.id) || seededProduct);
+
+    for (const storedProduct of storedProducts) {
+        if (!INITIAL_PRODUCTS.some((seededProduct) => seededProduct.id === storedProduct.id)) {
+            mergedProducts.push(storedProduct);
+        }
+    }
+
+    return mergedProducts;
+}
+
 export async function getStoredProducts(): Promise<PaverProduct[]> {
     try {
         const { data, error } = await supabaseAdmin
@@ -18,7 +35,7 @@ export async function getStoredProducts(): Promise<PaverProduct[]> {
             return INITIAL_PRODUCTS;
         }
 
-        return data as PaverProduct[];
+        return mergeSeededProducts(data as PaverProduct[]);
     } catch (error) {
         console.error('Error reading products from Supabase:', error);
         return INITIAL_PRODUCTS;

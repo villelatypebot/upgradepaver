@@ -1,3 +1,5 @@
+import seededProducts from "../../data/products.json";
+
 export type ManufacturerId = 'flagstone' | 'tremron' | 'tricircle';
 
 export interface PaverVariant {
@@ -27,23 +29,7 @@ export const MANUFACTURERS: { id: ManufacturerId; name: string; logo: string }[]
     { id: 'tricircle', name: 'TriCircle', logo: '/logos/tricircle.png' },
 ];
 
-export const INITIAL_PRODUCTS: PaverProduct[] = [
-    {
-        id: "monaco",
-        name: "Monaco",
-        description: "Elegant and timeless stone look.",
-        manufacturerId: 'tremron',
-        variants: [
-            {
-                id: 'monaco-glacier',
-                name: 'Glacier',
-                textureUrl: "https://www.tremron.com/images/colors/roma/Monaco-Glacier.jpg",
-                exampleUrl: "https://www.tremron.com/images/product_slider/monaco_1.jpg",
-            }
-        ]
-    },
-    // We can migrate others or start fresh. Let's keep one example.
-];
+export const INITIAL_PRODUCTS: PaverProduct[] = seededProducts as PaverProduct[];
 
 // Legacy type for backward compatibility during migration if needed
 export interface PaverOption {
