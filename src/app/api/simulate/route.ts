@@ -172,7 +172,7 @@ export async function POST(req: Request) {
                             data: textureBase64,
                         },
                     ],
-                    response_mime_type: "image/jpeg",
+                    response_modalities: ["image"],
                     response_format: {
                         type: "image",
                         mime_type: "image/jpeg",
